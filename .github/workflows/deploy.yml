@@ -1,0 +1,41 @@
+name: 🚀 Deploy a servidor FTP/SFTP
+
+on:
+  push:
+    branches:
+      - master  # Cambia si tu rama principal es otra
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Descargar código
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Subir archivos al servidor por FTP/SFTP
+      - name: Upload to server via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT }}
+          protocol: ftp          # Cambia a ftp o ftps si tu hosting no usa SFTP
+          local-dir: ./           # Carpeta local a subir
+          server-dir: /public_html/farmacia/   # Ruta remota en tu hosting
+          exclude: |              # Archivos/carpetas a ignorar
+            **/.git*
+            **/.github*
+            **/node_modules/**
+            **/vendor/**
+            **/.env
+            **/storage/logs/**
+            **/storage/framework/cache/**
+            **/storage/framework/views/*
+
+      # 3️⃣ Llamar a script PHP en el servidor para tareas post-deploy
+      - name: Post-deploy script
+        run: |
+          curl -X GET "https://farmacia.armada.mil.do/artisan-run.php?cmd=migrate:fresh%20--seed"
