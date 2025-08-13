@@ -24,7 +24,7 @@ use Swis\Filament\Backgrounds\ImageProviders\MyImages;
 use App\Filament\Widgets\MonthlyMovementsChart;
 use App\Filament\Widgets\DailyOutputsByPatientTypeChart;
 use Illuminate\Support\Facades\Auth;
-
+use TomatoPHP\FilamentArtisan\FilamentArtisanPlugin;
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -45,7 +45,7 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
             ])
-            ->plugins([
+            ->plugins(array_filter([
                 FilamentBackgroundsPlugin::make()
                 ->imageProvider(
                     MyImages::make()
@@ -59,11 +59,12 @@ class AdminPanelProvider extends PanelProvider
                     ->navigationSort(1)
                     ->slug('env-editor')
                     ->authorize(
-                        fn () => Auth::check() && optional(Auth::user())->isAdmin()
+                        fn () => Auth::guard('web')->check() && optional(Auth::guard('web')->user())->isAdmin()
                     ),
                 EnvironmentIndicatorPlugin::make()
-                    ->visible(fn () => Auth::check() && optional(Auth::user())->isAdmin())
-            ])
+                    ->visible(fn () => Auth::guard('web')->check() && optional(Auth::guard('web')->user())->isAdmin()),
+                Auth::guard('web')->check() && optional(Auth::guard('web')->user())->isAdmin() ? FilamentArtisanPlugin::make() : null
+            ]))
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 // Widgets\AccountWidget::class,

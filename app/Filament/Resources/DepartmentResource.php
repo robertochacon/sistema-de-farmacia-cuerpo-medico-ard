@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class DepartmentResource extends Resource
 {
@@ -101,6 +102,7 @@ class DepartmentResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->isAdmin() || auth()->user()->isSupervisor();
+        $user = Auth::guard('web')->user();
+        return $user instanceof \App\Models\User ? ($user->isAdmin() || $user->isSupervisor()) : false;
     }
 }
