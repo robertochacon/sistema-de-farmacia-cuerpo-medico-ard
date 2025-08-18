@@ -159,7 +159,12 @@ class MedicationOutputResource extends Resource
                                     $set('doctor_name', $name.' ('.$digits.')');
                                 }
                             })
-                            ->helperText('Opcional: se rellenará como Nombre Apellido (cédula).'),
+                            ->helperText('Opcional: se rellenará como Nombre Apellido (cédula).')
+                            ->visible(fn (Get $get) => in_array($get('patient_type'), ['civilian','military'])),
+                        Forms\Components\TextInput::make('doctor_name')
+                            ->label('Nombre del médico')
+                            ->visible(fn (Get $get) => in_array($get('patient_type'), ['civilian','military']))
+                            ->helperText('Opcional: puede escribirlo o se autocompleta por cédula.'),
                     ])->columns(2),
                 Forms\Components\Repeater::make('items')
                     ->label('Medicamentos')
