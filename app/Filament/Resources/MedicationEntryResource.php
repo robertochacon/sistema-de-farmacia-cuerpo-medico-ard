@@ -36,9 +36,11 @@ class MedicationEntryResource extends Resource
                         'donation' => 'Donación',
                         'order' => 'Pedido',
                         'purchase' => 'Compra',
-                    ])->required(),
+                    ])->required()
+                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => '']),
                 Forms\Components\Textarea::make('notes')
                     ->label('Notas')
+                    ->extraAttributes(['x-on:keydown.enter.stop' => ''])
                     ->columnSpanFull(),
                 Forms\Components\Repeater::make('items')
                     ->label('Medicamentos')
@@ -49,18 +51,23 @@ class MedicationEntryResource extends Resource
                             ->options(fn () => Medication::query()->orderBy('name')->pluck('name', 'id'))
                             ->searchable()
                             ->preload()
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                             ->required(),
                         Forms\Components\TextInput::make('quantity')
                             ->numeric()->minValue(1)
                             ->required()
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                             ->label('Cantidad'),
                         Forms\Components\TextInput::make('unit_price')
                             ->numeric()
                             ->default(0)
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                             ->label('Precio unitario'),
                         Forms\Components\DatePicker::make('expiration_date')
-                            ->label('Vence'),
+                            ->label('Vence')
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => '']),
                         Forms\Components\TextInput::make('lot_number')
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                             ->label('Lote'),
                     ])
                     ->columns(5)

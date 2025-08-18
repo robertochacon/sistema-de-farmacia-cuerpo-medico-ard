@@ -13,4 +13,19 @@ class EditMedicationEntry extends EditRecord
     {
         return static::getResource()::getUrl('index');
     }
+
+    protected function getFormActions(): array
+    {
+        return [
+            \Filament\Actions\Action::make('save')
+                ->label('Guardar')
+                ->submit('save')
+                ->keyBindings([]),
+            \Filament\Actions\Action::make('cancel')
+                ->label('Cancelar')
+                ->url(static::getResource()::getUrl('index'))
+                ->color('secondary')
+                ->outlined(),
+        ];
+    }
 } 
