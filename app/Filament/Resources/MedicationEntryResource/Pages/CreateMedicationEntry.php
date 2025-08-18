@@ -52,4 +52,24 @@ class CreateMedicationEntry extends CreateRecord
     {
         return static::getResource()::getUrl('index');
     }
+
+    protected function getFormActions(): array
+    {
+        return [
+            \Filament\Actions\Action::make('create')
+                ->label('Guardar')
+                ->submit('create')
+                ->keyBindings([]),
+            \Filament\Actions\Action::make('createAnother')
+                ->label('Guardar y crear otro')
+                ->submit('createAnother')
+                ->color('gray')
+                ->keyBindings([]),
+            \Filament\Actions\Action::make('cancel')
+                ->label('Cancelar')
+                ->url(static::getResource()::getUrl('index'))
+                ->color('secondary')
+                ->outlined(),
+        ];
+    }
 } 

@@ -62,6 +62,7 @@ class MedicationOutputResource extends Resource
                     ])
                     ->native(false)
                     ->reactive()
+                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                     ->required(),
                 Forms\Components\Select::make('department_id')
                     ->searchable()
@@ -70,6 +71,7 @@ class MedicationOutputResource extends Resource
                     ->reactive()
                     ->disabled(fn (Get $get) => in_array($get('patient_type'), ['military', 'civilian'], true))
                     ->required(fn (Get $get) => $get('patient_type') === 'department')
+                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                     ->default(fn () => Department::where('code', 'FAR')->value('id') ?? Department::where('name', 'Farmacia')->value('id') ?? null),
                 Forms\Components\Group::make()
                     ->schema([
@@ -77,6 +79,7 @@ class MedicationOutputResource extends Resource
                             ->label('Cédula militar')
                             ->hint('Digite cédula y presione fuera para buscar')
                             ->mask('999-9999999-9')
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                             ->required(fn (Get $get) => $get('patient_type') === 'military')
                             ->rule(function () {
                                 return function (string $attribute, $value, \Closure $fail) {
@@ -118,12 +121,14 @@ class MedicationOutputResource extends Resource
                         Forms\Components\TextInput::make('patient_name')
                             ->label('Nombre del paciente')
                             ->placeholder('Para pacientes civiles o relleno automático')
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                             ->visible(fn (Get $get) => in_array($get('patient_type'), ['civilian','military']))
                             ->required(fn (Get $get) => in_array($get('patient_type'), ['civilian','military']))
                             ->helperText('Para militar se rellenará como Nombre Apellido (cédula).'),
                         Forms\Components\TextInput::make('doctor_external_id')
                             ->label('Cédula médico')
                             ->mask('999-9999999-9')
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                             ->rule(function () {
                                 return function (string $attribute, $value, \Closure $fail) {
                                     if ($value === null || $value === '') {
@@ -163,6 +168,7 @@ class MedicationOutputResource extends Resource
                             ->visible(fn (Get $get) => in_array($get('patient_type'), ['civilian','military'])),
                         Forms\Components\TextInput::make('doctor_name')
                             ->label('Nombre del médico')
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                             ->visible(fn (Get $get) => in_array($get('patient_type'), ['civilian','military']))
                             ->helperText('Opcional: puede escribirlo o se autocompleta por cédula.'),
                     ])->columns(2),
@@ -176,6 +182,7 @@ class MedicationOutputResource extends Resource
                             ->searchable()
                             ->preload()
                             ->reactive()
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                             ->afterStateUpdated(fn (Set $set, Get $get) => static::computeTotals($set, $get))
                             ->required(),
                         Forms\Components\TextInput::make('quantity')
@@ -208,7 +215,11 @@ class MedicationOutputResource extends Resource
                                 $entered = (int) ($get('quantity') ?? 0);
                                 $available = (int) (Medication::find($medicationId)?->quantity ?? 0);
                                 $exceeds = $medicationId && $entered > $available;
-                                return $exceeds ? ['class' => 'border-danger-500 text-danger-600'] : [];
+                                $attrs = ['x-on:keydown.enter.stop.prevent' => ''];
+                                if ($exceeds) {
+                                    $attrs['class'] = 'border-danger-500 text-danger-600';
+                                }
+                                return $attrs;
                             })
                             ->afterStateUpdated(fn (Set $set, Get $get) => static::computeTotals($set, $get))
                             ->label('Cantidad'),
@@ -225,10 +236,12 @@ class MedicationOutputResource extends Resource
                     ->disabled()
                     ->dehydrated(false)
                     ->reactive()
+                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                     ->afterStateHydrated(fn (Set $set, Get $get) => static::computeTotals($set, $get))
                     ->helperText('Se calcula automáticamente a partir de los ítems.'),
                 Forms\Components\Textarea::make('reason')
                     ->label('Motivo')
+                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                     ->columnSpanFull(),
                 Forms\Components\FileUpload::make('prescription_image')
                     ->label('Receta')
