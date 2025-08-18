@@ -15,14 +15,14 @@ jobs:
         uses: actions/checkout@v4
 
       # 2️⃣ Subir archivos al servidor por FTP/SFTP
-      - name: Upload to server via FTP
+      - name: Upload to server via FTPS (TLS)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
-          protocol: ftp          # Cambia a ftp o ftps si tu hosting no usa SFTP
+          protocol: ftps         # Usa TLS (FTPS). Si tu servidor es SFTP, usa protocol: sftp
           local-dir: ./           # Carpeta local a subir
           server-dir: /public_html/farmacia/   # Ruta remota en tu hosting
           exclude: |              # Archivos/carpetas a ignorar
