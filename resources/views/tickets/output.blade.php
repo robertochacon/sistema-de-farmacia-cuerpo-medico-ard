@@ -18,7 +18,8 @@
     </style>
 </head>
 <body onload="window.print()">
-    <div class="center">
+    <div class="center" style="margin-bottom:6px;">
+        <img src="/images/armada-logo.png" alt="Armada" style="height:56px; display:block; margin:0 auto 4px;">
         <strong>{{ config('app.name', 'Farmacia') }}</strong><br>
         <span class="muted">Ticket de salida #{{ $output->id }}</span>
     </div>

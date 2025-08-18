@@ -11,6 +11,10 @@
     </style>
 </head>
 <body>
+    <div style="text-align:center; margin-bottom:8px;">
+        <img src="{{ public_path('images/armada-logo.png') }}" alt="Armada" style="height:90px;">
+        <div style="font-weight:bold; margin-top:4px;">ARMADA DE RÚBLICA DOMINICANA</div>
+    </div>
     <h2>Reporte de salidas</h2>
     <div style="margin-bottom:8px;">
         @php
