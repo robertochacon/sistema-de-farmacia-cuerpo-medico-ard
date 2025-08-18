@@ -38,8 +38,9 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Green,
             ])
             ->darkMode(false)
-            ->brandLogo(null)
-            ->brandName(config('app.name', 'Aplicación'))
+            // ->brandLogo(asset('images/armada-logo.png'))
+            // validar si la ruta actual es la de login
+            ->brandName(Auth::guard('web')->check() ? 'Sistema de Farmacia' : '')
             ->renderHook('panels::auth.login.form.before', fn () => view('filament.auth.brand-header'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
