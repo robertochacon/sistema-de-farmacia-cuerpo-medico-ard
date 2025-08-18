@@ -67,6 +67,7 @@ class MedicationMovementResource extends Resource
             ])
             ->headerActions([
                 Tables\Actions\ExportAction::make()
+                    ->exporter(\App\Filament\Exports\MedicationMovementExporter::class)
                     ->label('Exportar')
                     ->fileName(fn () => 'movimientos_'.now()->format('Ymd_His')),
             ])

@@ -52,20 +52,115 @@ class MedicationOutputResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('department_id')
-                    ->searchable()
-                    ->label('Departamento destino')
-                    ->options(fn () => Department::query()->orderBy('name')->pluck('name', 'id'))
-                    ->required(),
                 Forms\Components\Select::make('patient_type')
                     ->searchable()
                     ->label('Tipo de paciente')
                     ->options([
                         'military' => 'Militar',
                         'civilian' => 'Civil',
+                        'department' => 'Departamento',
                     ])
                     ->native(false)
+                    ->reactive()
                     ->required(),
+                Forms\Components\Select::make('department_id')
+                    ->searchable()
+                    ->label('Departamento destino')
+                    ->options(fn () => Department::query()->orderBy('name')->pluck('name', 'id'))
+                    ->reactive()
+                    ->disabled(fn (Get $get) => in_array($get('patient_type'), ['military', 'civilian'], true))
+                    ->required(fn (Get $get) => $get('patient_type') === 'department')
+                    ->default(fn () => Department::where('code', 'FAR')->value('id') ?? Department::where('name', 'Farmacia')->value('id') ?? null),
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\TextInput::make('patient_external_id')
+                            ->label('Cédula militar')
+                            ->hint('Digite cédula y presione fuera para buscar')
+                            ->mask('999-9999999-9')
+                            ->required(fn (Get $get) => $get('patient_type') === 'military')
+                            ->rule(function () {
+                                return function (string $attribute, $value, \Closure $fail) {
+                                    if ($value === null || $value === '') {
+                                        return;
+                                    }
+                                    $digits = preg_replace('/\D+/', '', (string) $value);
+                                    if (strlen($digits) !== 11) {
+                                        $fail('Cédula inválida. Debe tener 11 dígitos.');
+                                    }
+                                };
+                            })
+                            ->reactive()
+                            ->afterStateUpdated(function (Set $set, $state) {
+                                $armada = app(\App\Services\ArmadaApi::class);
+                                $ard = app(\App\Services\ARD::class);
+                                $dir = app(\App\Services\MilitaryDirectory::class);
+                                $name = null;
+                                $digits = preg_replace('/\D+/', '', (string) $state);
+                                if (strlen($digits) !== 11) {
+                                    return; // no lookup until cedula is valid
+                                }
+                                // 1) Armada API
+                                $p = $armada->getPerson($digits);
+                                $name = is_array($p) ? $armada->formatName($p) : null;
+                                if ($ard->isConfigured()) {
+                                    $p = $name ? null : $ard->getPerson($digits);
+                                    $name = $name ?: (is_array($p) ? $ard->formatName($p) : null);
+                                }
+                                if (! $name) {
+                                    $name = $dir->getDisplayName($digits);
+                                }
+                                if ($name) {
+                                    $set('patient_name', $name.' ('.$digits.')');
+                                }
+                            })
+                            ->visible(fn (Get $get) => $get('patient_type') === 'military')
+                            ,
+                        Forms\Components\TextInput::make('patient_name')
+                            ->label('Nombre del paciente')
+                            ->placeholder('Para pacientes civiles o relleno automático')
+                            ->visible(fn (Get $get) => in_array($get('patient_type'), ['civilian','military']))
+                            ->required(fn (Get $get) => in_array($get('patient_type'), ['civilian','military']))
+                            ->helperText('Para militar se rellenará como Nombre Apellido (cédula).'),
+                        Forms\Components\TextInput::make('doctor_external_id')
+                            ->label('Cédula médico')
+                            ->mask('999-9999999-9')
+                            ->rule(function () {
+                                return function (string $attribute, $value, \Closure $fail) {
+                                    if ($value === null || $value === '') {
+                                        return;
+                                    }
+                                    $digits = preg_replace('/\D+/', '', (string) $value);
+                                    if (strlen($digits) !== 11) {
+                                        $fail('Cédula inválida. Debe tener 11 dígitos.');
+                                    }
+                                };
+                            })
+                            ->reactive()
+                            ->afterStateUpdated(function (Set $set, $state) {
+                                $armada = app(\App\Services\ArmadaApi::class);
+                                $ard = app(\App\Services\ARD::class);
+                                $dir = app(\App\Services\MilitaryDirectory::class);
+                                $name = null;
+                                $digits = preg_replace('/\D+/', '', (string) $state);
+                                if (strlen($digits) !== 11) {
+                                    return; // no lookup until cedula is valid
+                                }
+                                // 1) Armada API
+                                $p = $armada->getPerson($digits);
+                                $name = is_array($p) ? $armada->formatName($p) : null;
+                                if ($ard->isConfigured()) {
+                                    $p = $name ? null : $ard->getPerson($digits);
+                                    $name = $name ?: (is_array($p) ? $ard->formatName($p) : null);
+                                }
+                                if (! $name) {
+                                    $name = $dir->getDisplayName($digits);
+                                }
+                                if ($name) {
+                                    $set('doctor_name', $name.' ('.$digits.')');
+                                }
+                            })
+                            ->helperText('Opcional: se rellenará como Nombre Apellido (cédula).'),
+                    ])->columns(2),
                 Forms\Components\Repeater::make('items')
                     ->label('Medicamentos')
                     ->schema([
@@ -156,15 +251,23 @@ class MedicationOutputResource extends Resource
                 Tables\Columns\BadgeColumn::make('patient_type')->label('Paciente')->colors([
                     'primary' => 'military',
                     'gray' => 'civilian',
+                    'success' => 'department',
                 ])->formatStateUsing(fn (string $state) => match ($state) {
                     'military' => 'Militar',
                     'civilian' => 'Civil',
+                    'department' => 'Departamento',
                     default => $state,
                 }),
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Cantidad total')
                     ->state(fn (MedicationOutput $record) => (int) $record->items()->sum('quantity')),
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->label('Fecha'),
+                Tables\Columns\TextColumn::make('patient_name')
+                    ->label('Paciente nombre')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('doctor_name')
+                    ->label('Médico')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('patient_type')
@@ -172,6 +275,7 @@ class MedicationOutputResource extends Resource
                     ->options([
                         'military' => 'Militar',
                         'civilian' => 'Civil',
+                        'department' => 'Departamento',
                     ]),
                 Tables\Filters\Filter::make('date')
                     ->form([
@@ -183,14 +287,29 @@ class MedicationOutputResource extends Resource
                             ->when($data['from'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
                             ->when($data['until'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '<=', $date));
                     }),
+                Tables\Filters\Filter::make('department')
+                    ->form([
+                        Forms\Components\Select::make('department_id')
+                            ->label('Departamento')
+                            ->options(fn () => \App\Models\Department::orderBy('name')->pluck('name', 'id'))
+                            ->searchable()
+                            ->native(false),
+                    ])
+                    ->query(fn ($query, array $data) => $query->when($data['department_id'] ?? null, fn ($q, $id) => $q->where('department_id', $id))),
             ])
             ->headerActions([
                 Tables\Actions\ExportAction::make()
+                    ->exporter(\App\Filament\Exports\MedicationOutputExporter::class)
                     ->label('Exportar')
                     ->fileName(fn () => 'salidas_'.now()->format('Ymd_His')),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('ticket')
+                    ->label('Ticket')
+                    ->icon('heroicon-o-printer')
+                    ->url(fn (MedicationOutput $record) => route('tickets.outputs.show', $record))
+                    ->openUrlInNewTab(),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

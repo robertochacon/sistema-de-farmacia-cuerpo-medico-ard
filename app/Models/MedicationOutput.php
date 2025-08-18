@@ -14,6 +14,10 @@ class MedicationOutput extends Model
         'reason',
         'prescription_image',
         'patient_type',
+        'patient_external_id',
+        'patient_name',
+        'doctor_external_id',
+        'doctor_name',
         'notes',
     ];
 

@@ -13,6 +13,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use App\Filament\Resources\DepartmentResource\RelationManagers\ChildrenRelationManager;
 
 class DepartmentResource extends Resource
 {
@@ -86,9 +87,7 @@ class DepartmentResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

@@ -23,10 +23,19 @@ class DashboardOverview extends BaseWidget
 
         $todayMilitary = MedicationOutput::whereDate('created_at', today())
             ->where('patient_type', 'military')
-            ->sum('quantity');
+            ->withSum('items as total', 'quantity')
+            ->get()
+            ->sum('total');
         $todayCivilian = MedicationOutput::whereDate('created_at', today())
             ->where('patient_type', 'civilian')
-            ->sum('quantity');
+            ->withSum('items as total', 'quantity')
+            ->get()
+            ->sum('total');
+        $todayDepartmental = MedicationOutput::whereDate('created_at', today())
+            ->where('patient_type', 'department')
+            ->withSum('items as total', 'quantity')
+            ->get()
+            ->sum('total');
 
         return [
             Stat::make('Departamentos', $departments)
@@ -61,6 +70,10 @@ class DashboardOverview extends BaseWidget
                 ->description('Cantidad entregada a civiles hoy')
                 ->descriptionIcon('heroicon-m-arrow-down-left')
                 ->color('secondary'),
+            Stat::make('Salidas hoy (Deptos.)', $todayDepartmental)
+                ->description('Cantidad entregada a departamentos hoy')
+                ->descriptionIcon('heroicon-m-arrow-down-left')
+                ->color('success'),
         ];
     }
 

@@ -43,6 +43,74 @@ class EditMedicationOutput extends EditRecord
             ->all();
         unset($data['items']);
 
+        // Resolve names from external IDs for denormalized storage
+        if (($data['patient_type'] ?? null) === 'military') {
+            if (empty($data['patient_external_id'])) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'patient_external_id' => 'La cédula del militar es obligatoria.',
+                ]);
+            }
+        }
+
+        if (! empty($data['patient_external_id'])) {
+            $digits = preg_replace('/\D+/', '', (string) $data['patient_external_id']);
+            if (strlen($digits) !== 11) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'patient_external_id' => 'Cédula inválida. Debe tener 11 dígitos.',
+                ]);
+            }
+            $armada = app(\App\Services\ArmadaApi::class);
+            $ard = app(\App\Services\ARD::class);
+            $dir = app(\App\Services\MilitaryDirectory::class);
+            $name = null;
+            // 1) Armada API
+            $p = $armada->getPerson($digits);
+            $name = is_array($p) ? $armada->formatName($p) : null;
+            if ($ard->isConfigured()) {
+                $p = $name ? null : $ard->getPerson($digits);
+                $name = $name ?: (is_array($p) ? $ard->formatName($p) : null);
+            }
+            if (! $name) {
+                $name = $dir->getDisplayName($digits);
+            }
+            if ($name) {
+                $data['patient_name'] = $name.' ('.$digits.')';
+                $data['patient_external_id'] = $digits;
+            }
+            if (empty($data['patient_name'])) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'patient_name' => 'Debe escribir el nombre del militar si no se puede obtener automáticamente.',
+                ]);
+            }
+        }
+
+        if (! empty($data['doctor_external_id'])) {
+            $digits = preg_replace('/\D+/', '', (string) $data['doctor_external_id']);
+            if (strlen($digits) !== 11) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'doctor_external_id' => 'Cédula inválida. Debe tener 11 dígitos.',
+                ]);
+            }
+            $armada = app(\App\Services\ArmadaApi::class);
+            $ard = app(\App\Services\ARD::class);
+            $dir = app(\App\Services\MilitaryDirectory::class);
+            $name = null;
+            // 1) Armada API
+            $p = $armada->getPerson($digits);
+            $name = is_array($p) ? $armada->formatName($p) : null;
+            if ($ard->isConfigured()) {
+                $p = $name ? null : $ard->getPerson($digits);
+                $name = $name ?: (is_array($p) ? $ard->formatName($p) : null);
+            }
+            if (! $name) {
+                $name = $dir->getDisplayName($digits);
+            }
+            if ($name) {
+                $data['doctor_name'] = $name.' ('.$digits.')';
+                $data['doctor_external_id'] = $digits;
+            }
+        }
+
         return $data;
     }
 

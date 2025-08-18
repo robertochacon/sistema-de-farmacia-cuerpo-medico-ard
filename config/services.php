@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    'navy' => [
+        'base_url' => env('NAVY_API_BASE_URL'),
+        'token' => env('NAVY_API_TOKEN'),
+    ],
+
+    'ard' => [
+        'base_url' => env('ARD_API_BASE_URL'),
+    ],
+
+    'armada' => [
+        'base_url' => env('ARMADA_API_BASE_URL', 'https://armada.mide.gob.do/api'),
+    ],
+
 ];

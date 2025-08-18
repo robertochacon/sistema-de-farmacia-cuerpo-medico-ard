@@ -36,6 +36,7 @@ class DailyOutputsByPatientTypeChart extends ChartWidget
 
         $military = [];
         $civilian = [];
+        $departmental = [];
         $labels = [];
 
         foreach ($days as $d) {
@@ -43,11 +44,21 @@ class DailyOutputsByPatientTypeChart extends ChartWidget
             $military[] = MedicationOutput::when($dept !== 'all', fn ($q) => $q->where('department_id', $dept))
                 ->whereDate('created_at', $d->toDateString())
                 ->where('patient_type', 'military')
-                ->sum('quantity');
+                ->withSum('items as total', 'quantity')
+                ->get()
+                ->sum('total');
             $civilian[] = MedicationOutput::when($dept !== 'all', fn ($q) => $q->where('department_id', $dept))
                 ->whereDate('created_at', $d->toDateString())
                 ->where('patient_type', 'civilian')
-                ->sum('quantity');
+                ->withSum('items as total', 'quantity')
+                ->get()
+                ->sum('total');
+            $departmental[] = MedicationOutput::when($dept !== 'all', fn ($q) => $q->where('department_id', $dept))
+                ->whereDate('created_at', $d->toDateString())
+                ->where('patient_type', 'department')
+                ->withSum('items as total', 'quantity')
+                ->get()
+                ->sum('total');
         }
 
         return [
@@ -63,6 +74,12 @@ class DailyOutputsByPatientTypeChart extends ChartWidget
                     'data' => $civilian,
                     'backgroundColor' => 'rgba(107,114,128,0.5)',
                     'borderColor' => '#6b7280',
+                ],
+                [
+                    'label' => 'Departamentos',
+                    'data' => $departmental,
+                    'backgroundColor' => 'rgba(34,197,94,0.5)',
+                    'borderColor' => '#22c55e',
                 ],
             ],
             'labels' => $labels,
