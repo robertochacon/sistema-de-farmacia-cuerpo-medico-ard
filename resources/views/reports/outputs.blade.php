@@ -31,6 +31,7 @@
                 <th>Fecha</th>
                 <th>Departamento</th>
                 <th>Paciente</th>
+                <th>Médico</th>
                 <th>Detalle</th>
                 <th>Total</th>
             </tr>
@@ -46,6 +47,11 @@
                     {{ $o->patient_type === 'military' ? 'Militar' : ($o->patient_type === 'department' ? 'Departamento' : 'Civil') }}
                     @if($o->patient_name)
                         <div style="color:#555;">{{ $o->patient_name }}</div>
+                    @endif
+                </td>
+                <td>
+                    @if($o->doctor_name)
+                        {{ $o->doctor_name }}
                     @endif
                 </td>
                 <td>
