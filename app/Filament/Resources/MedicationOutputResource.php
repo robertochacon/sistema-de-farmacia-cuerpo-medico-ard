@@ -65,14 +65,29 @@ class MedicationOutputResource extends Resource
                     ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                     ->required(),
                 Forms\Components\Select::make('department_id')
-                    ->searchable()
                     ->label('Departamento destino')
-                    ->options(fn () => Department::query()->orderBy('name')->pluck('name', 'id'))
+                    ->relationship('department', 'name', modifyQueryUsing: fn ($query) => $query->orderBy('name'))
+                    ->searchable()
+                    ->preload()
                     ->reactive()
                     ->disabled(fn (Get $get) => in_array($get('patient_type'), ['military', 'civilian'], true))
                     ->required(fn (Get $get) => $get('patient_type') === 'department')
                     ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
-                    ->default(fn () => Department::where('code', 'FAR')->value('id') ?? Department::where('name', 'Farmacia')->value('id') ?? null),
+                    ->default(fn () => Department::where('code', 'FAR')->value('id') ?? Department::where('name', 'Farmacia')->value('id') ?? null)
+                    ->createOptionForm([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nombre')
+                            ->required(),
+                        Forms\Components\TextInput::make('code')
+                            ->label('Código')
+                            ->required(),
+                        Forms\Components\Textarea::make('description')
+                            ->label('Descripción'),
+                        Forms\Components\Toggle::make('status')
+                            ->label('Estado')
+                            ->default(true),
+                    ])
+                    ->createOptionUsing(fn (array $data) => Department::create($data)->getKey()),
                 Forms\Components\Group::make()
                     ->schema([
                         Forms\Components\TextInput::make('patient_external_id')
