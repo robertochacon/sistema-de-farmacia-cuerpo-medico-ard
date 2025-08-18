@@ -41,5 +41,13 @@ class UserSeeder extends Seeder
             'created_at' => date("Y-m-d H:i:s")
         ]);
 
+        ModelsUser::create([
+            'name' => 'Aristides',
+            'email' => 'aristides2476@gmail.com',
+            'password' => bcrypt('marinamv'),
+            'remember_token' => null,
+            'role' => 'admin',
+            'created_at' => date("Y-m-d H:i:s")
+        ]);
     }
 }
