@@ -46,8 +46,9 @@ class UserSeeder extends Seeder
             'password' => bcrypt('marinamv'),
             'remember_token' => null,
             'role' => 'admin',
-            'created_at' => date("Y-m-d H:i:s")
+            'created_at' => now()
         ]);
+
         // === Usuarios de la lista (todos como "employee") ===
         $users = [
             ['name' => 'MARTHA BRIOSO', 'email' => 'martha.brioso@app.com'],
