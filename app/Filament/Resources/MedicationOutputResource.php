@@ -54,7 +54,7 @@ class MedicationOutputResource extends Resource
             ->schema([
                 Forms\Components\Select::make('patient_type')
                     ->searchable()
-                    ->label('Tipo de paciente')
+                    ->label('Tipo de salida')
                     ->options([
                         'military' => 'Militar',
                         'civilian' => 'Civil',
