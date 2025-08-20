@@ -12,6 +12,8 @@ class MedicationEntry extends Model
     protected $fillable = [
         'entry_type',
         'user_id',
+        'document_number',
+        'received_at',
         'notes',
     ];
 

@@ -12,6 +12,8 @@ return new class extends Migration
             $table->id();
             $table->enum('entry_type', ['donation', 'order', 'purchase']);
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('document_number')->nullable();
+            $table->date('received_at')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
         });

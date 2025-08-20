@@ -51,7 +51,11 @@ class MedicationEntryObserver
                 'balance' => $medication->quantity,
                 'reference_type' => MedicationEntry::class,
                 'reference_id' => $entry->id,
-                'notes' => $entry->notes,
+                'notes' => trim(collect([
+                    $entry->notes,
+                    $entry->document_number ? 'Doc: '.$entry->document_number : null,
+                    $entry->received_at ? 'Recibido: '.\Illuminate\Support\Carbon::parse($entry->received_at)->format('d/m/Y') : null,
+                ])->filter()->implode(' | ')),
             ]);
         }
     }

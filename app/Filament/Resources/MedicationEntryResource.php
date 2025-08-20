@@ -38,10 +38,15 @@ class MedicationEntryResource extends Resource
                         'purchase' => 'Compra',
                     ])->required()
                     ->extraAttributes(['x-on:keydown.enter.stop.prevent' => '']),
-                Forms\Components\Textarea::make('notes')
-                    ->label('Notas')
-                    ->extraAttributes(['x-on:keydown.enter.stop' => ''])
-                    ->columnSpanFull(),
+                Forms\Components\TextInput::make('document_number')
+                    ->label('Número de documento')
+                    ->maxLength(100)
+                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => '']),
+                Forms\Components\DatePicker::make('received_at')
+                    ->label('Fecha de recepción')
+                    ->native(false)
+                    ->displayFormat('d/m/Y')
+                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => '']),
                 Forms\Components\Repeater::make('items')
                     ->label('Medicamentos')
                     ->relationship()
@@ -52,7 +57,8 @@ class MedicationEntryResource extends Resource
                             ->searchable()
                             ->preload()
                             ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
-                            ->required(),
+                            ->required()
+                            ->columnSpan(3),
                         Forms\Components\TextInput::make('quantity')
                             ->numeric()->minValue(1)
                             ->required()
@@ -62,21 +68,31 @@ class MedicationEntryResource extends Resource
                             ->numeric()
                             ->default(0)
                             ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
-                            ->label('Precio unitario'),
+                            ->label('Precio'),
                         Forms\Components\DatePicker::make('expiration_date')
                             ->label('Vence')
                             ->extraAttributes(['x-on:keydown.enter.stop.prevent' => '']),
                         Forms\Components\TextInput::make('lot_number')
                             ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                             ->label('Lote'),
+                        // Removed per request: document_number & received_at in items
                     ])
-                    ->columns(5)
+                    ->columns(7)
                     ->createItemButtonLabel('Agregar medicamento')
                     ->collapsed(false)
                     ->grid(1)
                     ->minItems(1)
-                    ->reorderable(false),
-            ])->columns(1);
+                    ->reorderable(false)
+                    ->columnSpanFull(),
+                Forms\Components\Textarea::make('notes')
+                    ->label('Notas')
+                    ->extraAttributes(['x-on:keydown.enter.stop' => ''])
+                    ->columnSpanFull(),
+            ])->columns([
+                'default' => 1,
+                'md' => 2,
+                'lg' => 3,
+            ]);
     }
 
     public static function table(Table $table): Table
