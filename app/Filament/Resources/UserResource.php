@@ -100,12 +100,12 @@ class UserResource extends Resource
                 Tables\Columns\ToggleColumn::make('status')
                     ->label('Estado'),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->date('d/m/Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->label('Creado'),
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->date('d/m/Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->label('Actualizado'),

@@ -169,6 +169,7 @@ class MedicationOutputResource extends Resource
                 Forms\Components\Repeater::make('items')
                     ->label('Medicamentos')
                     ->schema([
+                        Forms\Components\Hidden::make('id'),
                         Forms\Components\Select::make('medication_id')
                             ->label('Medicamento')
                             ->options(fn () => Medication::orderBy('name')->pluck('name', 'id'))
@@ -264,9 +265,9 @@ class MedicationOutputResource extends Resource
                     default => $state,
                 }),
                 Tables\Columns\TextColumn::make('quantity')
-                    ->label('Cantidad total')
+                    ->label('Total')
                     ->state(fn (MedicationOutput $record) => (int) $record->items()->sum('quantity')),
-                Tables\Columns\TextColumn::make('created_at')->dateTime()->label('Fecha'),
+                Tables\Columns\TextColumn::make('created_at')->date('d/m/Y')->label('Fecha'),
                 Tables\Columns\TextColumn::make('patient_name')
                     ->label('Paciente nombre')
                     ->toggleable(isToggledHiddenByDefault: true),

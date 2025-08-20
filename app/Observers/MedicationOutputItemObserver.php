@@ -46,6 +46,14 @@ class MedicationOutputItemObserver
         $newQuantity = (int) $item->quantity;
 
         if ($originalMedicationId !== $newMedicationId) {
+            // Validate new medication has enough stock for the new quantity
+            $newMedication = Medication::find($newMedicationId);
+            if (! $newMedication || $newMedication->quantity < $newQuantity) {
+                $available = $newMedication?->quantity ?? 0;
+                throw ValidationException::withMessages([
+                    'items' => "Stock insuficiente para {$newMedication?->name}. Disponible: {$available}",
+                ]);
+            }
             // Revert old medication quantity
             $this->adjustInventoryAndLog((clone $item)->forceFill(['medication_id' => $originalMedicationId]), +1, $originalQuantity);
             // Apply new medication quantity
@@ -55,7 +63,20 @@ class MedicationOutputItemObserver
 
         $delta = $newQuantity - $originalQuantity;
         if ($delta !== 0) {
-            $this->adjustInventoryAndLog($item, $delta > 0 ? -1 : +1, abs($delta));
+            if ($delta > 0) {
+                // Increasing output: ensure there is enough stock
+                $medication = Medication::find($newMedicationId);
+                if (! $medication || $medication->quantity < $delta) {
+                    $available = $medication?->quantity ?? 0;
+                    throw ValidationException::withMessages([
+                        'items' => "Stock insuficiente para {$medication?->name}. Disponible: {$available}",
+                    ]);
+                }
+                $this->adjustInventoryAndLog($item, -1, $delta);
+            } else {
+                // Decreasing output: return stock, no validation needed
+                $this->adjustInventoryAndLog($item, +1, abs($delta));
+            }
         }
     }
 

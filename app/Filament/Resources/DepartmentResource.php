@@ -63,12 +63,12 @@ class DepartmentResource extends Resource
                     ->label('Estado'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de creación')
-                    ->dateTime()
+                    ->date('d/m/Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Fecha de actualización')
-                    ->dateTime()
+                    ->date('d/m/Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

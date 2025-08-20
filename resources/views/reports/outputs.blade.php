@@ -12,8 +12,8 @@
 </head>
 <body>
     <div style="text-align:center; margin-bottom:8px;">
-        <img src="{{ public_path('images/armada-logo.png') }}" alt="Armada" style="height:90px;">
-        <div style="font-weight:bold; margin-top:4px;">ARMADA DE RÚBLICA DOMINICANA</div>
+        <img src="{{ public_path('images/armada-logo.png') }}" alt="Armada" style="height:120px;">
+        <div style="font-weight:bold; margin-top:4px;">Farmacia de la Armada</div>
     </div>
     <h2>Reporte de salidas</h2>
     <div style="margin-bottom:8px;">
@@ -21,7 +21,6 @@
             $from = data_get($filters, 'from');
             $until = data_get($filters, 'until');
         @endphp
-        <div>Rango: {{ $from ?: 'N/A' }} - {{ $until ?: 'N/A' }}</div>
     </div>
 
     <table>
@@ -41,7 +40,7 @@
             @php $total = (int) $o->items->sum('quantity'); @endphp
             <tr>
                 <td>{{ $o->id }}</td>
-                <td>{{ $o->created_at->format('d/m/Y H:i') }}</td>
+                <td>{{ $o->created_at->format('d/m/Y') }}</td>
                 <td>{{ $o->department?->name }}</td>
                 <td>
                     {{ $o->patient_type === 'military' ? 'Militar' : ($o->patient_type === 'department' ? 'Departamento' : 'Civil') }}

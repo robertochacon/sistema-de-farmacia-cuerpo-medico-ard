@@ -79,9 +79,9 @@ class MedicationResource extends Resource
                 Tables\Columns\TextColumn::make('name')->label('Nombre')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('presentation')->label('Presentación'),
                 Tables\Columns\TextColumn::make('concentration')->label('Concentración')->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('quantity')->label('Cantidad')->sortable(),
+                Tables\Columns\TextColumn::make('quantity')->label('Existencia')->sortable(),
                 Tables\Columns\TextColumn::make('unit_price')->label('Precio')->money('DOP')->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('expiration_date')->date()->label('Vence')->sortable(),
+                Tables\Columns\TextColumn::make('expiration_date')->date()->label('Vence')->date('d/m/Y')->sortable(),
                 Tables\Columns\ToggleColumn::make('status')->label('Activo'),
             ])
             ->filters([])

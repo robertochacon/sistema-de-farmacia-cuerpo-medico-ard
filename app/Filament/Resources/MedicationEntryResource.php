@@ -94,7 +94,7 @@ class MedicationEntryResource extends Resource
                 Tables\Columns\TextColumn::make('items_count')
                     ->counts('items')
                     ->label('Ítems'),
-                Tables\Columns\TextColumn::make('created_at')->dateTime()->label('Fecha'),
+                Tables\Columns\TextColumn::make('created_at')->date('d/m/Y')->label('Fecha'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
