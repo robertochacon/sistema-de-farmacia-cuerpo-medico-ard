@@ -45,7 +45,7 @@ class UserSeeder extends Seeder
             'email' => 'aristides2476@gmail.com',
             'password' => bcrypt('marinamv'),
             'remember_token' => null,
-            'role' => 'admin',
+            'role' => 'supervisor',
             'created_at' => now()
         ]);
 
