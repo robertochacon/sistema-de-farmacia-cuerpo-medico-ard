@@ -37,6 +37,7 @@ class MedicationEntryResource extends Resource
                         'order' => 'Pedido',
                         'purchase' => 'Compra',
                     ])->required()
+                    ->reactive()
                     ->extraAttributes(['x-on:keydown.enter.stop.prevent' => '']),
                 Forms\Components\TextInput::make('document_number')
                     ->label('Número de documento')
@@ -47,6 +48,28 @@ class MedicationEntryResource extends Resource
                     ->native(false)
                     ->displayFormat('d/m/Y')
                     ->extraAttributes(['x-on:keydown.enter.stop.prevent' => '']),
+                Forms\Components\Select::make('organization_id')
+                    ->label('Empresa/Institución')
+                    ->relationship('organization', 'name', modifyQueryUsing: function ($query) { return $query->orderBy('name'); })
+                    ->native(false)
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn ($get) => in_array($get('entry_type'), ['donation', 'purchase']))
+                    ->required(fn ($get) => in_array($get('entry_type'), ['donation', 'purchase']))
+                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
+                    ->createOptionForm([
+                        Forms\Components\TextInput::make('name')->label('Nombre')->required(),
+                        Forms\Components\Select::make('type')->label('Tipo')->options([
+                            'company' => 'Empresa',
+                            'institution' => 'Institución',
+                        ])->required()->native(false),
+                        Forms\Components\TextInput::make('rnc')->label('RNC'),
+                        Forms\Components\TextInput::make('phone')->label('Teléfono'),
+                        Forms\Components\TextInput::make('address')->label('Dirección'),
+                        Forms\Components\Toggle::make('status')->label('Estado')->default(true),
+                    ])
+                    ->createOptionAction(fn (Forms\Components\Actions\Action $action) => $action->modalHeading('Crear empresa/institución')->modalSubmitActionLabel('Crear')->modalWidth('lg'))
+                    ->createOptionUsing(fn (array $data) => \App\Models\Organization::create($data)->getKey()),
                 Forms\Components\Repeater::make('items')
                     ->label('Medicamentos')
                     ->relationship()
@@ -91,7 +114,7 @@ class MedicationEntryResource extends Resource
             ])->columns([
                 'default' => 1,
                 'md' => 2,
-                'lg' => 3,
+                'lg' => 4,
             ]);
     }
 
