@@ -14,6 +14,7 @@ class MedicationEntry extends Model
         'user_id',
         'document_number',
         'received_at',
+        'organization_id',
         'notes',
     ];
 
@@ -25,5 +26,10 @@ class MedicationEntry extends Model
     public function items(): HasMany
     {
         return $this->hasMany(MedicationEntryItem::class, 'entry_id');
+    }
+
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
     }
 } 
