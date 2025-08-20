@@ -15,6 +15,21 @@ class EditMedicationOutput extends EditRecord
     /** @var array<int, array{id?:int, medication_id:int, quantity:int}> */
     protected array $itemsBuffer = [];
 
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $data['items'] = $this->record
+            ->items()
+            ->get(['id', 'medication_id', 'quantity'])
+            ->map(fn ($i) => [
+                'id' => (int) $i->id,
+                'medication_id' => (int) $i->medication_id,
+                'quantity' => (int) $i->quantity,
+            ])
+            ->all();
+
+        return $data;
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $items = collect($data['items'] ?? []);
@@ -120,19 +135,26 @@ class EditMedicationOutput extends EditRecord
             $existing = $this->record->items()->get(['id'])->pluck('id')->all();
             $incomingIds = collect($this->itemsBuffer)->pluck('id')->filter()->map(fn ($id) => (int) $id)->all();
 
-            // Delete removed items
+            // Delete removed items (ensure model events fire)
             $toDelete = array_diff($existing, $incomingIds);
             if (! empty($toDelete)) {
-                $this->record->items()->whereIn('id', $toDelete)->delete();
+                $this->record->items()
+                    ->whereIn('id', $toDelete)
+                    ->get()
+                    ->each(function ($model) {
+                        $model->delete();
+                    });
             }
 
-            // Upsert current items
+            // Upsert current items (ensure model events fire)
             foreach ($this->itemsBuffer as $item) {
                 if (! empty($item['id'])) {
-                    $this->record->items()->whereKey($item['id'])->update([
-                        'medication_id' => $item['medication_id'],
-                        'quantity' => $item['quantity'],
-                    ]);
+                    $model = $this->record->items()->whereKey($item['id'])->first();
+                    if ($model) {
+                        $model->medication_id = $item['medication_id'];
+                        $model->quantity = $item['quantity'];
+                        $model->save();
+                    }
                 } else {
                     $this->record->items()->create([
                         'medication_id' => $item['medication_id'],

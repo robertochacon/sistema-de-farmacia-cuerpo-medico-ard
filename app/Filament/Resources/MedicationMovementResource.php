@@ -35,7 +35,7 @@ class MedicationMovementResource extends Resource
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
-                Tables\Columns\TextColumn::make('created_at')->dateTime()->label('Fecha')->sortable(),
+                Tables\Columns\TextColumn::make('created_at')->date('d/m/Y')->label('Fecha')->sortable(),
                 Tables\Columns\TextColumn::make('medication.name')->label('Medicamento')->searchable(),
                 Tables\Columns\BadgeColumn::make('type')->label('Tipo')->colors([
                     'success' => 'in',

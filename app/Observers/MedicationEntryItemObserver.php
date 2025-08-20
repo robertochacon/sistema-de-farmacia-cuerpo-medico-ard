@@ -38,6 +38,14 @@ class MedicationEntryItemObserver
         $newQuantity = (int) $item->quantity;
 
         if ($originalMedicationId !== $newMedicationId) {
+            // Validate we can revert stock from the original medication
+            $originalMedication = Medication::find($originalMedicationId);
+            if (! $originalMedication || $originalMedication->quantity < $originalQuantity) {
+                $available = $originalMedication?->quantity ?? 0;
+                throw ValidationException::withMessages([
+                    'items' => "No se puede cambiar el medicamento porque el original no tiene saldo suficiente para revertir. Disponible: {$available}",
+                ]);
+            }
             // Revert old medication quantity
             $this->adjustInventoryAndUpdateProps((clone $item)->forceFill(['medication_id' => $originalMedicationId]), -1, $originalQuantity);
             // Apply new medication quantity
@@ -47,13 +55,36 @@ class MedicationEntryItemObserver
 
         $delta = $newQuantity - $originalQuantity;
         if ($delta !== 0) {
-            $this->adjustInventoryAndUpdateProps($item, $delta > 0 ? +1 : -1, abs($delta));
+            if ($delta > 0) {
+                // Increasing entry: just add stock
+                $this->adjustInventoryAndUpdateProps($item, +1, $delta);
+            } else {
+                // Decreasing entry: ensure enough balance to remove
+                $medication = Medication::find($newMedicationId);
+                $absDelta = abs($delta);
+                if (! $medication || $medication->quantity < $absDelta) {
+                    $available = $medication?->quantity ?? 0;
+                    throw ValidationException::withMessages([
+                        'items' => "No se puede reducir la entrada porque el stock actual ({$available}) es menor que la reducción solicitada ({$absDelta}).",
+                    ]);
+                }
+                $this->adjustInventoryAndUpdateProps($item, -1, $absDelta);
+            }
         }
     }
 
     public function deleted(MedicationEntryItem $item): void
     {
-        $this->adjustInventoryAndUpdateProps($item, -1, $item->quantity);
+        // Ensure enough balance to remove the entry effect
+        $medication = Medication::find($item->medication_id);
+        $qty = (int) $item->quantity;
+        if (! $medication || $medication->quantity < $qty) {
+            $available = $medication?->quantity ?? 0;
+            throw ValidationException::withMessages([
+                'items' => "No se puede eliminar el ítem de entrada porque el stock actual ({$available}) es menor que lo que se debe revertir ({$qty}).",
+            ]);
+        }
+        $this->adjustInventoryAndUpdateProps($item, -1, $qty);
     }
 
     private function adjustInventoryAndUpdateProps(MedicationEntryItem $item, int $direction, int $quantity): void
