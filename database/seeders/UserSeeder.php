@@ -54,7 +54,7 @@ class UserSeeder extends Seeder
             'email' => 'catalino.rondon@app.com',
             'password' => bcrypt('123456'),
             'remember_token' => null,
-            'role' => 'employee',
+            'role' => 'supervisor',
             'created_at' => now()
         ]);
 
