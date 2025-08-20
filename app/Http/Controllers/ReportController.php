@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MedicationOutput;
+use App\Models\MedicationEntry;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -35,5 +36,34 @@ class ReportController extends Controller
         ])->setPaper('a4', 'portrait');
 
         return $pdf->stream('reporte_salidas_'.now()->format('Ymd_His').'.pdf');
+    }
+
+    public function entriesPdf(Request $request)
+    {
+        $query = MedicationEntry::query();
+
+        if ($request->filled('from')) {
+            $query->whereDate('received_at', '>=', $request->date('from'));
+        }
+        if ($request->filled('until')) {
+            $query->whereDate('received_at', '<=', $request->date('until'));
+        }
+        if ($request->filled('entry_type')) {
+            $query->where('entry_type', $request->string('entry_type'));
+        }
+        if ($request->filled('organization_id')) {
+            $query->where('organization_id', $request->integer('organization_id'));
+        }
+
+        $entries = $query->with(['organization:id,name', 'items.medication:id,name'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $pdf = Pdf::loadView('reports.entries', [
+            'entries' => $entries,
+            'filters' => $request->only(['from','until','entry_type','organization_id']),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->stream('reporte_entradas_'.now()->format('Ymd_His').'.pdf');
     }
 }

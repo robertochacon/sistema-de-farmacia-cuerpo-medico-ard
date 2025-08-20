@@ -17,4 +17,5 @@ Route::get('/login', function () {
 Route::middleware(['web'])->group(function () {
     Route::get('/tickets/outputs/{output}', [TicketController::class, 'showOutput'])->name('tickets.outputs.show');
     Route::get('/reports/outputs/pdf', [ReportController::class, 'outputsPdf'])->name('reports.outputs.pdf');
+    Route::get('/reports/entries/pdf', [ReportController::class, 'entriesPdf'])->name('reports.entries.pdf');
 });
