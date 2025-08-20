@@ -24,6 +24,7 @@ use Swis\Filament\Backgrounds\ImageProviders\MyImages;
 use App\Filament\Widgets\MonthlyMovementsChart;
 use App\Filament\Widgets\DailyOutputsByPatientTypeChart;
 use Illuminate\Support\Facades\Auth;
+use Filament\Navigation\MenuItem;
 use TomatoPHP\FilamentArtisan\FilamentArtisanPlugin;
 class AdminPanelProvider extends PanelProvider
 {
@@ -73,6 +74,12 @@ class AdminPanelProvider extends PanelProvider
                 // Widgets\AccountWidget::class,
                 MonthlyMovementsChart::class,
                 DailyOutputsByPatientTypeChart::class,
+            ])
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('Mi perfil')
+                    ->icon('heroicon-o-user-circle')
+                    ->url(fn () => route('profile.show')),
             ])
             ->middleware([
                 EncryptCookies::class,
