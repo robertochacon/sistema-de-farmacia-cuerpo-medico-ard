@@ -305,7 +305,7 @@ class MedicationOutputResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('patient_type')
-                    ->label('Tipo de paciente')
+                    ->label('Tipo de salida')
                     ->options([
                         'military' => 'Militar',
                         'civilian' => 'Civil',
