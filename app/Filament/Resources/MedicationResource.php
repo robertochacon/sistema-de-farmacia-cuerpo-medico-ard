@@ -32,7 +32,31 @@ class MedicationResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')->label('Nombre')->required(),
                 Forms\Components\TextInput::make('generic_name')->label('Genérico'),
-                Forms\Components\TextInput::make('presentation')->label('Presentación')->required(),
+                Forms\Components\Select::make('presentation')
+                    ->label('Presentación')
+                    ->options(fn () => Medication::query()
+                        ->whereNotNull('presentation')
+                        ->where('presentation', '!=', '')
+                        ->distinct()
+                        ->orderBy('presentation')
+                        ->pluck('presentation', 'presentation'))
+                    ->createOptionForm([
+                        Forms\Components\TextInput::make('presentation')
+                            ->label('Presentación nueva')
+                            ->required(),
+                    ])
+                    ->createOptionAction(fn (Forms\Components\Actions\Action $action) => $action
+                        ->modalHeading('Agregar presentación')
+                        ->modalSubmitActionLabel('Agregar')
+                        ->modalWidth('sm'))
+                    ->createOptionUsing(function (array $data) {
+                        $value = trim((string) ($data['presentation'] ?? ''));
+                        return $value !== '' ? $value : null;
+                    })
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->required(),
                 Forms\Components\TextInput::make('concentration')->label('Concentración'),
                 Forms\Components\TextInput::make('manufacturer')->label('Fabricante'),
                 Forms\Components\TextInput::make('lot_number')

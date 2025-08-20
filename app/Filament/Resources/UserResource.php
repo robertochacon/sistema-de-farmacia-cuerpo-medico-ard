@@ -50,6 +50,7 @@ class UserResource extends Resource
                     ->label('Rol'),
                 Forms\Components\TextInput::make('password')
                     ->password()
+                    ->revealable()
                     ->required(fn (string $operation): bool => $operation === 'create')
                     ->minLength(8)
                     ->same('passwordConfirmation')
@@ -58,6 +59,7 @@ class UserResource extends Resource
                     ->label('Contraseña'),
                 Forms\Components\TextInput::make('passwordConfirmation')
                     ->password()
+                    ->revealable()
                     ->required(fn (string $operation): bool => $operation === 'create')
                     ->minLength(8)
                     ->dehydrated(false)
