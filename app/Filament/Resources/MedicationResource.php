@@ -50,7 +50,7 @@ class MedicationResource extends Resource
                         ->modalSubmitActionLabel('Agregar')
                         ->modalWidth('sm'))
                     ->createOptionUsing(function (array $data) {
-                        $value = trim((string) ($data['presentation'] ?? ''));
+                        $value = strtoupper(trim((string) ($data['presentation'] ?? '')));
                         return $value !== '' ? $value : null;
                     })
                     ->searchable()
