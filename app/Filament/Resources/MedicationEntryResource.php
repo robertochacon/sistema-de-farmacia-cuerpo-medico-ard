@@ -124,6 +124,7 @@ class MedicationEntryResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('#')->sortable(),
+                Tables\Columns\TextColumn::make('received_at')->date('d/m/Y')->label('Recibido'),
                 Tables\Columns\BadgeColumn::make('entry_type')
                     ->label('Tipo')
                     ->colors([
@@ -140,7 +141,35 @@ class MedicationEntryResource extends Resource
                 Tables\Columns\TextColumn::make('items_count')
                     ->counts('items')
                     ->label('Ítems'),
-                Tables\Columns\TextColumn::make('created_at')->date('d/m/Y')->label('Fecha'),
+                Tables\Columns\TextColumn::make('created_at')->date('d/m/Y')->label('Creado')->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\Filter::make('date')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')->label('Desde'),
+                        Forms\Components\DatePicker::make('until')->label('Hasta'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['from'] ?? null, fn ($q, $date) => $q->whereDate('received_at', '>=', $date))
+                            ->when($data['until'] ?? null, fn ($q, $date) => $q->whereDate('received_at', '<=', $date));
+                    }),
+                Tables\Filters\SelectFilter::make('entry_type')
+                    ->label('Tipo')
+                    ->options([
+                        'donation' => 'Donación',
+                        'order' => 'Pedido',
+                        'purchase' => 'Compra',
+                    ]),
+                Tables\Filters\Filter::make('organization')
+                    ->form([
+                        Forms\Components\Select::make('organization_id')
+                            ->label('Empresa/Institución')
+                            ->options(fn () => \App\Models\Organization::orderBy('name')->pluck('name', 'id'))
+                            ->searchable()
+                            ->native(false),
+                    ])
+                    ->query(fn ($query, array $data) => $query->when($data['organization_id'] ?? null, fn ($q, $id) => $q->where('organization_id', $id))),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

@@ -14,6 +14,20 @@ class ListMedicationEntries extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+            Actions\Action::make('pdf_report')
+                ->label('PDF')
+                ->icon('heroicon-o-document')
+                ->url(function () {
+                    $filters = request()->input('table.filters', []);
+                    $params = [];
+                    if (!empty($filters['date']['from'] ?? null)) $params['from'] = $filters['date']['from'];
+                    if (!empty($filters['date']['until'] ?? null)) $params['until'] = $filters['date']['until'];
+                    if (!empty($filters['entry_type'] ?? null)) $params['entry_type'] = $filters['entry_type'];
+                    if (!empty($filters['organization']['organization_id'] ?? null)) $params['organization_id'] = $filters['organization']['organization_id'];
+                    return route('reports.entries.pdf', $params);
+                })
+                ->openUrlInNewTab()
+                ->color('danger'),
         ];
     }
 } 

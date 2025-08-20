@@ -18,6 +18,10 @@ class MedicationEntry extends Model
         'notes',
     ];
 
+    protected $casts = [
+        'received_at' => 'date',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
