@@ -199,7 +199,8 @@ class MedicationOutputResource extends Resource
                             ->reactive()
                             ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                             ->afterStateUpdated(fn (Set $set, Get $get) => static::computeTotals($set, $get))
-                            ->required(),
+                            ->required()
+                            ->columnSpan(3),
                         Forms\Components\TextInput::make('quantity')
                             ->numeric()->minValue(1)
                             ->required()
@@ -220,7 +221,7 @@ class MedicationOutputResource extends Resource
                             ->helperText(function (Get $get) {
                                 $medicationId = $get('medication_id');
                                 if (! $medicationId) {
-                                    return 'Seleccione un medicamento para ver stock disponible.';
+                                    return 'Stock disponible.';
                                 }
                                 $available = (int) (Medication::find($medicationId)?->quantity ?? 0);
                                 return "Disponible: $available";
@@ -237,10 +238,11 @@ class MedicationOutputResource extends Resource
                                 return $attrs;
                             })
                             ->afterStateUpdated(fn (Set $set, Get $get) => static::computeTotals($set, $get))
-                            ->label('Cantidad'),
+                            ->label('Cantidad')
+                            ->columnSpan(2),
                     ])
                     ->minItems(1)
-                    ->columns(2)
+                    ->columns(5)
                     ->createItemButtonLabel('Agregar medicamento')
                     ->reactive()
                     ->afterStateUpdated(fn (Set $set, Get $get) => static::computeTotals($set, $get)),
@@ -253,11 +255,11 @@ class MedicationOutputResource extends Resource
                     ->reactive()
                     ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                     ->afterStateHydrated(fn (Set $set, Get $get) => static::computeTotals($set, $get))
-                    ->helperText('Se calcula automáticamente a partir de los ítems.'),
+                    ->helperText('Se calcula automáticamente a partir de los ítems.')
+                    ->columnStart(2),
                 Forms\Components\Textarea::make('reason')
                     ->label('Motivo')
-                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
-                    ->columnSpanFull(),
+                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => '']),
                 Forms\Components\FileUpload::make('prescription_image')
                     ->label('Receta')
                     ->image()
