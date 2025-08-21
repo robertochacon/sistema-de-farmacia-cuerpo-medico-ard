@@ -19,6 +19,7 @@ Route::middleware(['web'])->group(function () {
     Route::get('/tickets/outputs/{output}', [TicketController::class, 'showOutput'])->name('tickets.outputs.show');
     Route::get('/reports/outputs/pdf', [ReportController::class, 'outputsPdf'])->name('reports.outputs.pdf');
     Route::get('/reports/entries/pdf', [ReportController::class, 'entriesPdf'])->name('reports.entries.pdf');
+    Route::get('/reports/inventory/pdf', [ReportController::class, 'inventoryPdf'])->name('reports.inventory.pdf');
     // Perfil del usuario actual
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
