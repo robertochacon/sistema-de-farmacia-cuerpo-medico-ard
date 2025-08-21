@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MedicationOutput;
 use App\Models\MedicationEntry;
+use App\Models\Medication;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -65,5 +66,28 @@ class ReportController extends Controller
         ])->setPaper('a4', 'portrait');
 
         return $pdf->stream('reporte_entradas_'.now()->format('Ymd_His').'.pdf');
+    }
+
+    public function inventoryPdf(Request $request)
+    {
+        $query = Medication::query();
+
+        if ($request->filled('only_with_stock')) {
+            $query->where('quantity', '>', 0);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', (bool) $request->boolean('status'));
+        }
+
+        $medications = $query
+            ->orderBy('name')
+            ->get(['id', 'name', 'quantity', 'expiration_date']);
+
+        $pdf = Pdf::loadView('reports.inventory', [
+            'medications' => $medications,
+            'generatedAt' => now(),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->stream('reporte_inventario_'.now()->format('Ymd_His').'.pdf');
     }
 }

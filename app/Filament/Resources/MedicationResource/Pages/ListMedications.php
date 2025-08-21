@@ -15,6 +15,11 @@ class ListMedications extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('inventoryReportPdf')
+                ->label('Exportar inventario (PDF)')
+                ->url(route('reports.inventory.pdf'))
+                ->icon('heroicon-o-arrow-down-tray')
+                ->openUrlInNewTab(),
             Actions\Action::make('redirectToEntries')
                 ->label('Entradas')
                 ->url(MedicationEntryResource::getUrl('index'))
