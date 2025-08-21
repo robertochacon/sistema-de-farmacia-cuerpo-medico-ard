@@ -82,7 +82,20 @@ class ReportController extends Controller
 
         $medications = $query
             ->orderBy('name')
-            ->get(['id', 'name', 'quantity', 'expiration_date']);
+            ->get(['id', 'name', 'quantity', 'expiration_date'])
+            ->map(function (Medication $medication) {
+                $date = $medication->expiration_date;
+                try {
+                    $formatted = $date instanceof \Carbon\CarbonInterface
+                        ? $date->format('d/m/Y')
+                        : ($date ? \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') : null);
+                } catch (\Throwable $e) {
+                    $formatted = null;
+                }
+                // Attach a view-only attribute to avoid calling methods in Blade
+                $medication->display_expiration = $formatted;
+                return $medication;
+            });
 
         try {
             $pdf = Pdf::loadView('reports.inventory', [

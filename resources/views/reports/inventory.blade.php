@@ -40,7 +40,7 @@
                 <td>{{ $m->id }}</td>
                 <td>{{ $m->name }}</td>
                 <td>{{ (int) ($m->quantity ?? 0) }}</td>
-                <td>{{ optional($m->expiration_date)->format('d/m/Y') }}</td>
+                <td>{{ $m->display_expiration ?? '' }}</td>
             </tr>
         @endforeach
         </tbody>
