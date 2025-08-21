@@ -71,50 +71,55 @@ class ReportController extends Controller
 
     public function inventoryPdf(Request $request)
     {
+        // Build base query with simple optional filters
         $query = Medication::query();
-
-        if ($request->filled('only_with_stock')) {
+        if ($request->boolean('only_with_stock')) {
             $query->where('quantity', '>', 0);
         }
         if ($request->has('status')) {
-            $query->where('status', (bool) $request->boolean('status'));
+            $query->where('status', $request->boolean('status'));
         }
 
-        $medications = $query
+        // Fetch only the required columns and pre-format data for the view/PDF
+        $rows = $query
             ->orderBy('name')
             ->get(['id', 'name', 'quantity', 'expiration_date'])
-            ->map(function (Medication $medication) {
-                $date = $medication->expiration_date;
+            ->map(function (Medication $m): array {
+                $expiration = '';
                 try {
-                    $formatted = $date instanceof \Carbon\CarbonInterface
-                        ? $date->format('d/m/Y')
-                        : ($date ? \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') : null);
+                    if ($m->expiration_date instanceof \Carbon\CarbonInterface) {
+                        $expiration = $m->expiration_date->format('d/m/Y');
+                    } elseif (! empty($m->expiration_date)) {
+                        $expiration = \Illuminate\Support\Carbon::parse($m->expiration_date)->format('d/m/Y');
+                    }
                 } catch (\Throwable $e) {
-                    $formatted = null;
+                    $expiration = '';
                 }
-                // Attach a view-only attribute to avoid calling methods in Blade
-                $medication->display_expiration = $formatted;
-                return $medication;
-            });
+                return [
+                    'id' => (int) $m->id,
+                    'name' => (string) $m->name,
+                    'quantity' => (int) ($m->quantity ?? 0),
+                    'expiration' => $expiration,
+                ];
+            })
+            ->all();
+
+        $data = [
+            'rows' => $rows,
+            'generatedAt' => now(),
+        ];
 
         try {
-            $pdf = Pdf::loadView('reports.inventory', [
-                'medications' => $medications,
-                'generatedAt' => now(),
-            ])->setPaper('a4', 'portrait');
-
+            $pdf = Pdf::loadView('reports.inventory', $data)->setPaper('a4', 'portrait');
             return $pdf->stream('reporte_inventario_'.now()->format('Ymd_His').'.pdf');
         } catch (\Throwable $e) {
-            Log::error('Inventory PDF generation failed', [
-                'message' => $e->getMessage(),
-            ]);
+            Log::error('Inventory PDF generation failed', ['message' => $e->getMessage()]);
+            if ($request->boolean('debug') || config('app.debug')) {
+                $data['errorMessage'] = $e->getMessage();
+                $data['errorTrace'] = $e->getTraceAsString();
+            }
             // Fallback to HTML view to avoid HTTP 500
-            return response()->view('reports.inventory', [
-                'medications' => $medications,
-                'generatedAt' => now(),
-                'errorMessage' => $e->getMessage(),
-                'errorTrace' => $request->boolean('debug') || config('app.debug') ? $e->getTraceAsString() : null,
-            ], 200);
+            return response()->view('reports.inventory', $data, 200);
         }
     }
 }

@@ -45,12 +45,18 @@
             </tr>
         </thead>
         <tbody>
-        @foreach($medications as $m)
+        @php($dataRows = isset($rows) ? $rows : (isset($medications) ? $medications->map(fn($m)=>[
+            'id' => $m->id,
+            'name' => $m->name,
+            'quantity' => (int) ($m->quantity ?? 0),
+            'expiration' => isset($m->display_expiration) ? $m->display_expiration : (optional($m->expiration_date) instanceof \Carbon\CarbonInterface ? optional($m->expiration_date)->format('d/m/Y') : ''),
+        ]) : collect()) )
+        @foreach($dataRows as $r)
             <tr>
-                <td>{{ $m->id }}</td>
-                <td>{{ $m->name }}</td>
-                <td>{{ (int) ($m->quantity ?? 0) }}</td>
-                <td>{{ $m->display_expiration ?? '' }}</td>
+                <td>{{ $r['id'] }}</td>
+                <td>{{ $r['name'] }}</td>
+                <td>{{ (int) $r['quantity'] }}</td>
+                <td>{{ $r['expiration'] }}</td>
             </tr>
         @endforeach
         </tbody>
