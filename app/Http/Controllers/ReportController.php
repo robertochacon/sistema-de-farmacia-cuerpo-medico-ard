@@ -83,11 +83,22 @@ class ReportController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'quantity', 'expiration_date']);
 
-        $pdf = Pdf::loadView('reports.inventory', [
-            'medications' => $medications,
-            'generatedAt' => now(),
-        ])->setPaper('a4', 'portrait');
+        try {
+            $pdf = Pdf::loadView('reports.inventory', [
+                'medications' => $medications,
+                'generatedAt' => now(),
+            ])->setPaper('a4', 'portrait');
 
-        return $pdf->stream('reporte_inventario_'.now()->format('Ymd_His').'.pdf');
+            return $pdf->stream('reporte_inventario_'.now()->format('Ymd_His').'.pdf');
+        } catch (\Throwable $e) {
+            \Log::error('Inventory PDF generation failed', [
+                'message' => $e->getMessage(),
+            ]);
+            // Fallback to HTML view to avoid HTTP 500
+            return response()->view('reports.inventory', [
+                'medications' => $medications,
+                'generatedAt' => now(),
+            ], 200);
+        }
     }
 }
