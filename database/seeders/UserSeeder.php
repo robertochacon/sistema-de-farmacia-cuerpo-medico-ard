@@ -49,6 +49,15 @@ class UserSeeder extends Seeder
             'created_at' => now()
         ]);
 
+        ModelsUser::create([
+            'name' => 'Catalino Rondon  Lopez',
+            'email' => 'catalino.rondon@app.com',
+            'password' => bcrypt('123456'),
+            'remember_token' => null,
+            'role' => 'employee',
+            'created_at' => now()
+        ]);
+
         // === Usuarios de la lista (todos como "employee") ===
         $users = [
             ['name' => 'MARTHA BRIOSO', 'email' => 'martha.brioso@app.com'],
