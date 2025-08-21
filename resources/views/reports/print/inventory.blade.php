@@ -18,6 +18,19 @@
         <div style="font-weight:bold; margin-top:4px;">Farmacia de la Armada</div>
     </div>
     <h2>Reporte de inventario (existencia)</h2>
+    @php
+        $formatExpiration = function ($value) {
+            try {
+                if ($value instanceof \Carbon\CarbonInterface) {
+                    return $value->format('d/m/Y');
+                }
+                if (!empty($value)) {
+                    return \Illuminate\Support\Carbon::parse($value)->format('d/m/Y');
+                }
+            } catch (\Throwable $e) {}
+            return '';
+        };
+    @endphp
 
     <table>
         <thead>
@@ -29,12 +42,12 @@
             </tr>
         </thead>
         <tbody>
-        @foreach($medications as $m)
+        @foreach(($medications ?? collect()) as $m)
             <tr>
                 <td>{{ $m->id }}</td>
                 <td>{{ $m->name }}</td>
                 <td>{{ (int) ($m->quantity ?? 0) }}</td>
-                <td>{{ optional($m->expiration_date)->format('d/m/Y') }}</td>
+                <td>{{ $formatExpiration($m->expiration_date ?? null) }}</td>
             </tr>
         @endforeach
         </tbody>

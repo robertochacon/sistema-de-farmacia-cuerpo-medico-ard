@@ -82,11 +82,11 @@ class ReportController extends Controller
 
         $medications = $query
             ->orderBy('name')
-            ->get(['id', 'name', 'quantity', 'expiration_date']);
+            ->get();
 
         $pdf = Pdf::loadView('reports.inventory', [
             'medications' => $medications,
-            'filters' => $request->only(['only_with_stock','status']),
+            'filters' => $request->only(['id', 'name', 'quantity', 'expiration_date']),
         ])->setPaper('a4', 'portrait');
 
         return $pdf->stream('reporte_inventario_'.now()->format('Ymd_His').'.pdf');

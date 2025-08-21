@@ -12,15 +12,7 @@
 </head>
 <body>
     <div style="text-align:center; margin-bottom:8px;">
-        @php
-            $logoPath = public_path('images/armada-logo.png');
-            $logoSrc = file_exists($logoPath)
-                ? ('data:image/png;base64,' . base64_encode(@file_get_contents($logoPath)))
-                : null;
-        @endphp
-        @if($logoSrc)
-            <img src="{{ $logoSrc }}" alt="Armada" style="height:120px;">
-        @endif
+        <img src="{{ public_path('images/armada-logo.png') }}" alt="Armada" style="height:120px;">
         <div style="font-weight:bold; margin-top:4px;">Farmacia de la Armada</div>
     </div>
     <h2>Reporte de inventario (existencia)</h2>
