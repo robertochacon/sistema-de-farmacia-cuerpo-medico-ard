@@ -7,6 +7,7 @@ use App\Models\MedicationEntry;
 use App\Models\Medication;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
@@ -75,7 +76,7 @@ class ReportController extends Controller
         if ($request->filled('only_with_stock')) {
             $query->where('quantity', '>', 0);
         }
-        if ($request->filled('status')) {
+        if ($request->has('status')) {
             $query->where('status', (bool) $request->boolean('status'));
         }
 
@@ -91,7 +92,7 @@ class ReportController extends Controller
 
             return $pdf->stream('reporte_inventario_'.now()->format('Ymd_His').'.pdf');
         } catch (\Throwable $e) {
-            \Log::error('Inventory PDF generation failed', [
+            Log::error('Inventory PDF generation failed', [
                 'message' => $e->getMessage(),
             ]);
             // Fallback to HTML view to avoid HTTP 500
