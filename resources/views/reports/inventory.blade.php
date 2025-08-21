@@ -24,16 +24,20 @@
         <div style="font-weight:bold; margin-top:4px;">Farmacia de la Armada</div>
     </div>
     <h2>Reporte de inventario (existencia)</h2>
-    @isset($errorMessage)
-        <div style="color:#b91c1c; background:#fee2e2; padding:8px; border:1px solid #fecaca; margin:8px 0;">
-            <strong>Error al generar PDF:</strong>
-            <div>{{ $errorMessage }}</div>
-            @if(!empty($errorTrace))
-                <pre style="white-space:pre-wrap; font-size:11px; color:#7f1d1d;">{{ $errorTrace }}</pre>
-            @endif
-            <div style="margin-top:6px; color:#374151;">Mostrando versión HTML como alternativa.</div>
-        </div>
-    @endisset
+    @php
+        // Compatibilidad: formateo seguro de fechas
+        $formatExpiration = function ($value) {
+            try {
+                if ($value instanceof \Carbon\CarbonInterface) {
+                    return $value->format('d/m/Y');
+                }
+                if (!empty($value)) {
+                    return \Illuminate\Support\Carbon::parse($value)->format('d/m/Y');
+                }
+            } catch (\Throwable $e) {}
+            return '';
+        };
+    @endphp
 
     <table>
         <thead>
@@ -45,18 +49,12 @@
             </tr>
         </thead>
         <tbody>
-        @php($dataRows = isset($rows) ? $rows : (isset($medications) ? $medications->map(fn($m)=>[
-            'id' => $m->id,
-            'name' => $m->name,
-            'quantity' => (int) ($m->quantity ?? 0),
-            'expiration' => isset($m->display_expiration) ? $m->display_expiration : (optional($m->expiration_date) instanceof \Carbon\CarbonInterface ? optional($m->expiration_date)->format('d/m/Y') : ''),
-        ]) : collect()) )
-        @foreach($dataRows as $r)
+        @foreach(($medications ?? collect()) as $m)
             <tr>
-                <td>{{ $r['id'] }}</td>
-                <td>{{ $r['name'] }}</td>
-                <td>{{ (int) $r['quantity'] }}</td>
-                <td>{{ $r['expiration'] }}</td>
+                <td>{{ $m->id }}</td>
+                <td>{{ $m->name }}</td>
+                <td>{{ (int) ($m->quantity ?? 0) }}</td>
+                <td>{{ $formatExpiration($m->expiration_date ?? null) }}</td>
             </tr>
         @endforeach
         </tbody>

@@ -71,55 +71,24 @@ class ReportController extends Controller
 
     public function inventoryPdf(Request $request)
     {
-        // Build base query with simple optional filters
         $query = Medication::query();
-        if ($request->boolean('only_with_stock')) {
+
+        if ($request->filled('only_with_stock')) {
             $query->where('quantity', '>', 0);
         }
-        if ($request->has('status')) {
+        if ($request->has('status')) { // permite 0/1
             $query->where('status', $request->boolean('status'));
         }
 
-        // Fetch only the required columns and pre-format data for the view/PDF
-        $rows = $query
+        $medications = $query
             ->orderBy('name')
-            ->get(['id', 'name', 'quantity', 'expiration_date'])
-            ->map(function (Medication $m): array {
-                $expiration = '';
-                try {
-                    if ($m->expiration_date instanceof \Carbon\CarbonInterface) {
-                        $expiration = $m->expiration_date->format('d/m/Y');
-                    } elseif (! empty($m->expiration_date)) {
-                        $expiration = \Illuminate\Support\Carbon::parse($m->expiration_date)->format('d/m/Y');
-                    }
-                } catch (\Throwable $e) {
-                    $expiration = '';
-                }
-                return [
-                    'id' => (int) $m->id,
-                    'name' => (string) $m->name,
-                    'quantity' => (int) ($m->quantity ?? 0),
-                    'expiration' => $expiration,
-                ];
-            })
-            ->all();
+            ->get(['id', 'name', 'quantity', 'expiration_date']);
 
-        $data = [
-            'rows' => $rows,
-            'generatedAt' => now(),
-        ];
+        $pdf = Pdf::loadView('reports.inventory', [
+            'medications' => $medications,
+            'filters' => $request->only(['only_with_stock','status']),
+        ])->setPaper('a4', 'portrait');
 
-        try {
-            $pdf = Pdf::loadView('reports.inventory', $data)->setPaper('a4', 'portrait');
-            return $pdf->stream('reporte_inventario_'.now()->format('Ymd_His').'.pdf');
-        } catch (\Throwable $e) {
-            Log::error('Inventory PDF generation failed', ['message' => $e->getMessage()]);
-            if ($request->boolean('debug') || config('app.debug')) {
-                $data['errorMessage'] = $e->getMessage();
-                $data['errorTrace'] = $e->getTraceAsString();
-            }
-            // Fallback to HTML view to avoid HTTP 500
-            return response()->view('reports.inventory', $data, 200);
-        }
+        return $pdf->stream('reporte_inventario_'.now()->format('Ymd_His').'.pdf');
     }
 }
