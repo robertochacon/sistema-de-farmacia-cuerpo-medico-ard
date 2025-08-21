@@ -24,6 +24,16 @@
         <div style="font-weight:bold; margin-top:4px;">Farmacia de la Armada</div>
     </div>
     <h2>Reporte de inventario (existencia)</h2>
+    @isset($errorMessage)
+        <div style="color:#b91c1c; background:#fee2e2; padding:8px; border:1px solid #fecaca; margin:8px 0;">
+            <strong>Error al generar PDF:</strong>
+            <div>{{ $errorMessage }}</div>
+            @if(!empty($errorTrace))
+                <pre style="white-space:pre-wrap; font-size:11px; color:#7f1d1d;">{{ $errorTrace }}</pre>
+            @endif
+            <div style="margin-top:6px; color:#374151;">Mostrando versión HTML como alternativa.</div>
+        </div>
+    @endisset
 
     <table>
         <thead>

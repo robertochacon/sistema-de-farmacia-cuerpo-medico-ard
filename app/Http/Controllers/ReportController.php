@@ -112,6 +112,8 @@ class ReportController extends Controller
             return response()->view('reports.inventory', [
                 'medications' => $medications,
                 'generatedAt' => now(),
+                'errorMessage' => $e->getMessage(),
+                'errorTrace' => $request->boolean('debug') || config('app.debug') ? $e->getTraceAsString() : null,
             ], 200);
         }
     }
