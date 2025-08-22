@@ -36,6 +36,6 @@ jobs:
             **/storage/framework/views/*
 
       # 3️⃣ Llamar a script PHP en el servidor para tareas post-deploy
-      - name: Post-deploy script
-        run: |
-          curl -X GET "https://farmacia.armada.mil.do/artisan-run.php?cmd=migrate:fresh%20--seed"
+      # - name: Post-deploy script
+      #   run: |
+      #     curl -X GET "https://farmacia.armada.mil.do/artisan-run.php?cmd=migrate:fresh%20--seed"
