@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\MedicationOutputItem;
 use App\Models\Medication;
 use App\Models\MedicationMovement;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class MedicationOutputItemObserver
@@ -26,9 +27,10 @@ class MedicationOutputItemObserver
             ]);
         }
 
-        if ($medication->quantity < $quantity) {
+        $available = (int) ($medication->quantity ?? 0);
+        if ($available < $quantity) {
             throw ValidationException::withMessages([
-                'items' => "Stock insuficiente para {$medication->name}. Disponible: {$medication->quantity}",
+                'items' => "Stock insuficiente para {$medication->name}. Disponible: {$available}",
             ]);
         }
     }
@@ -48,8 +50,8 @@ class MedicationOutputItemObserver
         if ($originalMedicationId !== $newMedicationId) {
             // Validate new medication has enough stock for the new quantity
             $newMedication = Medication::find($newMedicationId);
-            if (! $newMedication || $newMedication->quantity < $newQuantity) {
-                $available = $newMedication?->quantity ?? 0;
+            $available = (int) ($newMedication?->quantity ?? 0);
+            if (! $newMedication || $available < $newQuantity) {
                 throw ValidationException::withMessages([
                     'items' => "Stock insuficiente para {$newMedication?->name}. Disponible: {$available}",
                 ]);
@@ -66,8 +68,8 @@ class MedicationOutputItemObserver
             if ($delta > 0) {
                 // Increasing output: ensure there is enough stock
                 $medication = Medication::find($newMedicationId);
-                if (! $medication || $medication->quantity < $delta) {
-                    $available = $medication?->quantity ?? 0;
+                $available = (int) ($medication?->quantity ?? 0);
+                if (! $medication || $available < $delta) {
                     throw ValidationException::withMessages([
                         'items' => "Stock insuficiente para {$medication?->name}. Disponible: {$available}",
                     ]);
@@ -91,8 +93,11 @@ class MedicationOutputItemObserver
             return;
         }
 
+        $delta = (int) ($direction * $quantity);
         Medication::where('id', $item->medication_id)
-            ->increment('quantity', $direction * $quantity);
+            ->update([
+                'quantity' => DB::raw('COALESCE(quantity, 0) + ' . $delta),
+            ]);
 
         $medication = Medication::find($item->medication_id);
         $output = $item->output()->first();

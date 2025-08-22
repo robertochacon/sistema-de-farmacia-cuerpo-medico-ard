@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\MedicationEntryItem;
 use App\Models\Medication;
 use App\Models\MedicationMovement;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class MedicationEntryItemObserver
@@ -40,8 +41,8 @@ class MedicationEntryItemObserver
         if ($originalMedicationId !== $newMedicationId) {
             // Validate we can revert stock from the original medication
             $originalMedication = Medication::find($originalMedicationId);
-            if (! $originalMedication || $originalMedication->quantity < $originalQuantity) {
-                $available = $originalMedication?->quantity ?? 0;
+            $available = (int) ($originalMedication?->quantity ?? 0);
+            if (! $originalMedication || $available < $originalQuantity) {
                 throw ValidationException::withMessages([
                     'items' => "No se puede cambiar el medicamento porque el original no tiene saldo suficiente para revertir. Disponible: {$available}",
                 ]);
@@ -62,8 +63,8 @@ class MedicationEntryItemObserver
                 // Decreasing entry: ensure enough balance to remove
                 $medication = Medication::find($newMedicationId);
                 $absDelta = abs($delta);
-                if (! $medication || $medication->quantity < $absDelta) {
-                    $available = $medication?->quantity ?? 0;
+                $available = (int) ($medication?->quantity ?? 0);
+                if (! $medication || $available < $absDelta) {
                     throw ValidationException::withMessages([
                         'items' => "No se puede reducir la entrada porque el stock actual ({$available}) es menor que la reducción solicitada ({$absDelta}).",
                     ]);
@@ -78,8 +79,8 @@ class MedicationEntryItemObserver
         // Ensure enough balance to remove the entry effect
         $medication = Medication::find($item->medication_id);
         $qty = (int) $item->quantity;
-        if (! $medication || $medication->quantity < $qty) {
-            $available = $medication?->quantity ?? 0;
+        $available = (int) ($medication?->quantity ?? 0);
+        if (! $medication || $available < $qty) {
             throw ValidationException::withMessages([
                 'items' => "No se puede eliminar el ítem de entrada porque el stock actual ({$available}) es menor que lo que se debe revertir ({$qty}).",
             ]);
@@ -93,8 +94,11 @@ class MedicationEntryItemObserver
             return;
         }
 
+        $delta = (int) ($direction * $quantity);
         Medication::where('id', $item->medication_id)
-            ->increment('quantity', $direction * $quantity);
+            ->update([
+                'quantity' => DB::raw('COALESCE(quantity, 0) + ' . $delta),
+            ]);
 
         $medication = Medication::find($item->medication_id);
         if ($item->expiration_date !== null) {

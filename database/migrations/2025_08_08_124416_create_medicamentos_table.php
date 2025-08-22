@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('manufacturer')->nullable(); // fabricante
             $table->string('lot_number')->nullable(); // número de lote
             $table->date('expiration_date')->nullable(); // fecha de vencimiento
-            $table->integer('quantity')->nullable(); // cantidad disponible
+            $table->integer('quantity')->nullable()->default(0); // cantidad disponible
             $table->decimal('unit_price', 10, 2)->nullable(); // precio unitario
             $table->enum('entry_type', ['donation', 'order', 'purchase']); // tipo de entrada: donación, pedido, compra
             $table->text('notes')->nullable(); // notas adicionales
