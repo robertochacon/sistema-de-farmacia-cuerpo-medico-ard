@@ -29,47 +29,60 @@ class MedicationEntryResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('entry_type')
-                    ->searchable()
-                    ->label('Tipo de entrada')
-                    ->options([
-                        'donation' => 'Donación',
-                        'order' => 'Pedido',
-                        'purchase' => 'Compra',
-                    ])->required()
-                    ->reactive()
-                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => '']),
-                Forms\Components\TextInput::make('document_number')
-                    ->label('Número de documento')
-                    ->maxLength(100)
-                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => '']),
-                Forms\Components\DatePicker::make('received_at')
-                    ->label('Fecha de recepción')
-                    ->native(false)
-                    ->displayFormat('d/m/Y')
-                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => '']),
-                Forms\Components\Select::make('organization_id')
-                    ->label('Empresa/Institución')
-                    ->relationship('organization', 'name', modifyQueryUsing: function ($query) { return $query->orderBy('name'); })
-                    ->native(false)
-                    ->searchable()
-                    ->preload()
-                    ->visible(fn ($get) => in_array($get('entry_type'), ['donation', 'purchase']))
-                    ->required(fn ($get) => in_array($get('entry_type'), ['donation', 'purchase']))
-                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
-                    ->createOptionForm([
-                        Forms\Components\TextInput::make('name')->label('Nombre')->required(),
-                        Forms\Components\Select::make('type')->label('Tipo')->options([
-                            'company' => 'Empresa',
-                            'institution' => 'Institución',
-                        ])->required()->native(false),
-                        Forms\Components\TextInput::make('rnc')->label('RNC'),
-                        Forms\Components\TextInput::make('phone')->label('Teléfono'),
-                        Forms\Components\TextInput::make('address')->label('Dirección'),
-                        Forms\Components\Toggle::make('status')->label('Estado')->default(true),
-                    ])
-                    ->createOptionAction(fn (Forms\Components\Actions\Action $action) => $action->modalHeading('Crear empresa/institución')->modalSubmitActionLabel('Crear')->modalWidth('lg'))
-                    ->createOptionUsing(fn (array $data) => \App\Models\Organization::create($data)->getKey()),
+                Forms\Components\Section::make()
+                    ->schema([
+                // Cabecera en una sola fila (4 columnas): Tipo, Documento, Fecha
+                Forms\Components\Grid::make(4)
+                    ->schema([
+                        Forms\Components\Select::make('entry_type')
+                            ->searchable()
+                            ->label('Tipo de entrada')
+                            ->placeholder('Seleccione una opción')
+                            ->options([
+                                'donation' => 'Donación',
+                                'order' => 'Pedido',
+                                'purchase' => 'Compra',
+                            ])->required()
+                            ->reactive()
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
+                            ->columnSpan(1),
+                        Forms\Components\TextInput::make('document_number')
+                            ->label('Número de documento')
+                            ->maxLength(100)
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
+                            ->columnSpan(1),
+                        Forms\Components\DatePicker::make('received_at')
+                            ->label('Fecha de recepción')
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
+                            ->columnSpan(1),
+                        Forms\Components\Select::make('organization_id')
+                            ->label('Empresa/Institución')
+                            ->relationship('organization', 'name', modifyQueryUsing: function ($query) { return $query->orderBy('name'); })
+                            ->native(false)
+                            ->searchable()
+                            ->preload()
+                            ->visible(fn ($get) => in_array($get('entry_type'), ['donation', 'purchase']))
+                            ->required(fn ($get) => in_array($get('entry_type'), ['donation', 'purchase']))
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')->label('Nombre')->required(),
+                                Forms\Components\Select::make('type')->label('Tipo')->options([
+                                    'company' => 'Empresa',
+                                    'institution' => 'Institución',
+                                ])->required()->native(false),
+                                Forms\Components\TextInput::make('rnc')->label('RNC'),
+                                Forms\Components\TextInput::make('phone')->label('Teléfono'),
+                                Forms\Components\TextInput::make('address')->label('Dirección'),
+                                Forms\Components\Toggle::make('status')->label('Estado')->default(true),
+                            ])
+                            ->createOptionAction(fn (Forms\Components\Actions\Action $action) => $action->modalHeading('Crear empresa/institución')->modalSubmitActionLabel('Crear')->modalWidth('lg'))
+                            ->createOptionUsing(fn (array $data) => \App\Models\Organization::create($data)->getKey()),
+                            // layout columns for the top-level section
+                            Forms\Components\Grid::make(3)->schema([]),
+                    ]),
+                // Remove nested Section: keep only one level of Section
                 Forms\Components\Repeater::make('items')
                     ->label('Medicamentos')
                     ->relationship()
@@ -111,6 +124,7 @@ class MedicationEntryResource extends Resource
                     ->label('Notas')
                     ->extraAttributes(['x-on:keydown.enter.stop' => ''])
                     ->columnSpanFull(),
+                    ])
             ])->columns([
                 'default' => 1,
                 'md' => 2,

@@ -52,6 +52,9 @@ class MedicationOutputResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Section::make()
+                    ->schema([
+                // Flattened: no sub-sections
                 Forms\Components\Select::make('patient_type')
                     ->searchable()
                     ->label('Tipo de salida')
@@ -60,6 +63,7 @@ class MedicationOutputResource extends Resource
                         'civilian' => 'Civil',
                         'department' => 'Departamento',
                     ])
+                    ->default('military')
                     ->native(false)
                     ->reactive()
                     ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
@@ -92,7 +96,6 @@ class MedicationOutputResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('patient_external_id')
                             ->label('Cédula militar')
-                            ->hint('Digite cédula y presione fuera para buscar')
                             ->mask('999-9999999-9')
                             ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
                             ->required(fn (Get $get) => $get('patient_type') === 'military')
@@ -107,28 +110,49 @@ class MedicationOutputResource extends Resource
                                     }
                                 };
                             })
+                            ->helperText('Digite cédula y presione fuera para buscar')
                             ->reactive()
                             ->afterStateUpdated(function (Set $set, $state) {
                                 $armada = app(\App\Services\ArmadaApi::class);
                                 $ard = app(\App\Services\ARD::class);
                                 $dir = app(\App\Services\MilitaryDirectory::class);
                                 $name = null;
+                                $rank = null;
+                                $extractRank = function (array $row): ?string {
+                                    if (isset($row['descRango']) && is_string($row['descRango'])) {
+                                        $val = trim((string) $row['descRango']);
+                                        if ($val !== '') return $val;
+                                    }
+                                    if (isset($row['data']) && is_array($row['data']) && isset($row['data']['descRango']) && is_string($row['data']['descRango'])) {
+                                        $val = trim((string) $row['data']['descRango']);
+                                        if ($val !== '') return $val;
+                                    }
+                                    return null;
+                                };
                                 $digits = preg_replace('/\D+/', '', (string) $state);
                                 if (strlen($digits) !== 11) {
                                     return; // no lookup until cedula is valid
                                 }
                                 // 1) Armada API
                                 $p = $armada->getPerson($digits);
-                                $name = is_array($p) ? $armada->formatName($p) : null;
+                                if (is_array($p)) {
+                                    $name = $armada->formatName($p);
+                                    $rank = $extractRank($p);
+                                }
                                 if ($ard->isConfigured()) {
                                     $p = $name ? null : $ard->getPerson($digits);
-                                    $name = $name ?: (is_array($p) ? $ard->formatName($p) : null);
+                                    if (! $name && is_array($p)) {
+                                        $name = $ard->formatName($p);
+                                        $rank = $extractRank($p) ?? $rank;
+                                    }
                                 }
                                 if (! $name) {
                                     $name = $dir->getDisplayName($digits);
                                 }
                                 if ($name) {
-                                    $set('patient_name', $name.' ('.$digits.')');
+                                    $display = $rank ? ($name.' ('.$rank.')') : $name;
+                                    $set('patient_name', $display);
+                                    $set('patient_rank', $rank);
                                 }
                             })
                             ->visible(fn (Get $get) => $get('patient_type') === 'military')
@@ -137,9 +161,14 @@ class MedicationOutputResource extends Resource
                             ->label('Nombre del paciente')
                             ->placeholder('Para pacientes civiles o relleno automático')
                             ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
+                            ->reactive()
                             ->visible(fn (Get $get) => in_array($get('patient_type'), ['civilian','military']))
                             ->required(fn (Get $get) => in_array($get('patient_type'), ['civilian','military']))
-                            ->helperText('Para militar se rellenará como Nombre Apellido (cédula).'),
+                            ->helperText(function (Get $get) {
+                                $rank = $get('patient_rank');
+                                return $rank ?: 'Para militar se rellenará como Nombre Apellido (rango).';
+                            }),
+                        Forms\Components\Hidden::make('patient_rank')->dehydrated(false),
                         Forms\Components\TextInput::make('doctor_external_id')
                             ->label('Cédula médico')
                             ->mask('999-9999999-9')
@@ -161,31 +190,105 @@ class MedicationOutputResource extends Resource
                                 $ard = app(\App\Services\ARD::class);
                                 $dir = app(\App\Services\MilitaryDirectory::class);
                                 $name = null;
+                                $rank = null;
+                                $extractRank = function (array $row): ?string {
+                                    if (isset($row['descRango']) && is_string($row['descRango'])) {
+                                        $val = trim((string) $row['descRango']);
+                                        if ($val !== '') return $val;
+                                    }
+                                    if (isset($row['data']) && is_array($row['data']) && isset($row['data']['descRango']) && is_string($row['data']['descRango'])) {
+                                        $val = trim((string) $row['data']['descRango']);
+                                        if ($val !== '') return $val;
+                                    }
+                                    return null;
+                                };
                                 $digits = preg_replace('/\D+/', '', (string) $state);
                                 if (strlen($digits) !== 11) {
                                     return; // no lookup until cedula is valid
                                 }
                                 // 1) Armada API
                                 $p = $armada->getPerson($digits);
-                                $name = is_array($p) ? $armada->formatName($p) : null;
+                                if (is_array($p)) {
+                                    $name = $armada->formatName($p);
+                                    $rank = $extractRank($p);
+                                }
                                 if ($ard->isConfigured()) {
                                     $p = $name ? null : $ard->getPerson($digits);
-                                    $name = $name ?: (is_array($p) ? $ard->formatName($p) : null);
+                                    if (! $name && is_array($p)) {
+                                        $name = $ard->formatName($p);
+                                        $rank = $extractRank($p) ?? $rank;
+                                    }
                                 }
                                 if (! $name) {
                                     $name = $dir->getDisplayName($digits);
                                 }
                                 if ($name) {
-                                    $set('doctor_name', $name.' ('.$digits.')');
+                                    $display = $name;
+                                    if ($rank) {
+                                        $display .= ' ('.$rank.')';
+                                    }
+                                    $set('doctor_name', $display);
+                                    $set('doctor_rank', $rank);
                                 }
                             })
-                            ->helperText('Opcional: se rellenará como Nombre Apellido (cédula).')
+                            ->helperText('Opcional')
                             ->visible(fn (Get $get) => in_array($get('patient_type'), ['civilian','military'])),
+                        Forms\Components\Hidden::make('doctor_rank')->dehydrated(false),
                         Forms\Components\TextInput::make('doctor_name')
                             ->label('Nombre del médico')
                             ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
+                            ->reactive()
                             ->visible(fn (Get $get) => in_array($get('patient_type'), ['civilian','military']))
-                            ->helperText('Opcional: puede escribirlo o se autocompleta por cédula.'),
+                            ->helperText(function (Get $get) {
+                                $rank = $get('doctor_rank');
+                                return $rank ?: 'Opcional';
+                            }),
+                        Forms\Components\TextInput::make('responsible_external_id')
+                            ->label('Cédula responsable')
+                            ->mask('999-9999999-9')
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
+                            ->helperText('Opcional.')
+                            ->reactive()
+                            ->afterStateUpdated(function (Set $set, $state) {
+                                $armada = app(\App\Services\ArmadaApi::class);
+                                $ard = app(\App\Services\ARD::class);
+                                $dir = app(\App\Services\MilitaryDirectory::class);
+                                $name = null;
+                                $rank = null;
+                                $digits = preg_replace('/\D+/', '', (string) $state);
+                                if (strlen($digits) !== 11) {
+                                    return;
+                                }
+                                $p = $armada->getPerson($digits);
+                                if (is_array($p)) {
+                                    $name = $armada->formatName($p);
+                                    $rank = $p['descRango'] ?? null;
+                                }
+                                if (! $name && $ard->isConfigured()) {
+                                    $p = $ard->getPerson($digits);
+                                    if (is_array($p)) {
+                                        $name = $ard->formatName($p);
+                                        $rank = $p['descRango'] ?? $rank;
+                                    }
+                                }
+                                if (! $name) {
+                                    $name = $dir->getDisplayName($digits);
+                                }
+                                if ($name) {
+                                    $set('responsible_name', $name);
+                                    $set('responsible_rank', $rank);
+                                }
+                            })
+                            ->visible(fn (Get $get) => $get('patient_type') === 'department'),
+                        Forms\Components\Hidden::make('responsible_rank')->dehydrated(false),
+                        Forms\Components\TextInput::make('responsible_name')
+                            ->label('Nombre del responsable')
+                            ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
+                            ->helperText(function (Get $get) {
+                                $rank = $get('responsible_rank');
+                                return $rank ?: 'Opcional.';
+                            })
+                            ->visible(fn (Get $get) => $get('patient_type') === 'department'),
                     ])->columns(2),
                 Forms\Components\Repeater::make('items')
                     ->label('Medicamentos')
@@ -247,16 +350,6 @@ class MedicationOutputResource extends Resource
                     ->reactive()
                     ->afterStateUpdated(fn (Set $set, Get $get) => static::computeTotals($set, $get)),
                 Forms\Components\Hidden::make('has_exceeding')->default(false)->dehydrated(false),
-                Forms\Components\TextInput::make('total_quantity')
-                    ->numeric()
-                    ->label('Cantidad total')
-                    ->disabled()
-                    ->dehydrated(false)
-                    ->reactive()
-                    ->extraAttributes(['x-on:keydown.enter.stop.prevent' => ''])
-                    ->afterStateHydrated(fn (Set $set, Get $get) => static::computeTotals($set, $get))
-                    ->helperText('Se calcula automáticamente a partir de los ítems.')
-                    ->columnStart(2),
                 Forms\Components\Textarea::make('reason')
                     ->label('Motivo')
                     ->extraAttributes(['x-on:keydown.enter.stop.prevent' => '']),
@@ -265,7 +358,8 @@ class MedicationOutputResource extends Resource
                     ->image()
                     ->directory('prescriptions')
                     ->nullable(),
-            ])->columns(2);
+                    ])->columns(2)
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -342,7 +436,7 @@ class MedicationOutputResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('ticket')
-                    ->label('Ticket')
+                    ->label('Imprimir')
                     ->icon('heroicon-o-printer')
                     ->url(fn (MedicationOutput $record) => route('tickets.outputs.show', $record))
                     ->openUrlInNewTab(),

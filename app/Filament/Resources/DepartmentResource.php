@@ -33,6 +33,8 @@ class DepartmentResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Section::make()
+                    ->schema([
                 Forms\Components\TextInput::make('name')
                     ->label('Nombre')
                     ->required(),
@@ -45,6 +47,8 @@ class DepartmentResource extends Resource
                 Forms\Components\Toggle::make('status')
                     ->label('Estado')
                     ->required(),
+                    ])
+                    ->columns(2)
             ]);
     }
 

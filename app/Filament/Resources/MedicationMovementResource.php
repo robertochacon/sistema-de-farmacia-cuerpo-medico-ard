@@ -23,7 +23,7 @@ class MedicationMovementResource extends Resource
 
     protected static ?string $navigationLabel = 'Movimientos de medicamentos';
 
-    protected static ?string $navigationGroup = 'Farmacia';
+    protected static ?string $navigationGroup = 'Historial';
 
     public static function form(Form $form): Form
     {

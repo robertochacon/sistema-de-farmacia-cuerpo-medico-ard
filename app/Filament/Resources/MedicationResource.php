@@ -30,6 +30,8 @@ class MedicationResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Section::make()
+                    ->schema([
                 Forms\Components\TextInput::make('name')->label('Nombre')->required(),
                 Forms\Components\TextInput::make('generic_name')->label('Genérico'),
                 Forms\Components\Select::make('presentation')
@@ -92,7 +94,8 @@ class MedicationResource extends Resource
                     ->helperText('Solo se define al crear; no editable en Edición.'),
                 Forms\Components\Textarea::make('notes')->label('Notas')->columnSpanFull(),
                 Forms\Components\Toggle::make('status')->label('Activo')->default(true),
-            ])->columns(2);
+                    ])->columns(2)
+            ]);
     }
 
     public static function table(Table $table): Table

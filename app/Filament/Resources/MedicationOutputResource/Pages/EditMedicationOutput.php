@@ -4,6 +4,7 @@ namespace App\Filament\Resources\MedicationOutputResource\Pages;
 
 use App\Filament\Resources\MedicationOutputResource;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use Filament\Notifications\Notification;
@@ -11,6 +12,11 @@ use Filament\Notifications\Notification;
 class EditMedicationOutput extends EditRecord
 {
     protected static string $resource = MedicationOutputResource::class;
+
+    protected function authorizeAccess(): void
+    {
+        abort_unless(Gate::allows('update', $this->getRecord()), 403);
+    }
 
     /** @var array<int, array{id?:int, medication_id:int, quantity:int}> */
     protected array $itemsBuffer = [];
@@ -78,18 +84,30 @@ class EditMedicationOutput extends EditRecord
             $ard = app(\App\Services\ARD::class);
             $dir = app(\App\Services\MilitaryDirectory::class);
             $name = null;
+            $rank = null;
             // 1) Armada API
             $p = $armada->getPerson($digits);
-            $name = is_array($p) ? $armada->formatName($p) : null;
+            if (is_array($p)) {
+                $name = $armada->formatName($p);
+                $rank = $p['descRango'] ?? $p['descCortoRango'] ?? $p['desRango'] ?? null;
+            }
             if ($ard->isConfigured()) {
                 $p = $name ? null : $ard->getPerson($digits);
-                $name = $name ?: (is_array($p) ? $ard->formatName($p) : null);
+                if (! $name && is_array($p)) {
+                    $name = $ard->formatName($p);
+                    $rank = $p['descRango'] ?? $p['descCortoRango'] ?? $p['desRango'] ?? $rank;
+                }
             }
             if (! $name) {
                 $name = $dir->getDisplayName($digits);
             }
             if ($name) {
-                $data['patient_name'] = $name.' ('.$digits.')';
+                $display = $name;
+                if ($rank) {
+                    $display .= ' ('.$rank.')';
+                }
+                $display .= ' ('.$digits.')';
+                $data['patient_name'] = $display;
                 $data['patient_external_id'] = $digits;
             }
             if (empty($data['patient_name'])) {
@@ -110,18 +128,29 @@ class EditMedicationOutput extends EditRecord
             $ard = app(\App\Services\ARD::class);
             $dir = app(\App\Services\MilitaryDirectory::class);
             $name = null;
+            $rank = null;
             // 1) Armada API
             $p = $armada->getPerson($digits);
-            $name = is_array($p) ? $armada->formatName($p) : null;
+            if (is_array($p)) {
+                $name = $armada->formatName($p);
+                $rank = $p['descRango'] ?? $p['descCortoRango'] ?? $p['desRango'] ?? null;
+            }
             if ($ard->isConfigured()) {
                 $p = $name ? null : $ard->getPerson($digits);
-                $name = $name ?: (is_array($p) ? $ard->formatName($p) : null);
+                if (! $name && is_array($p)) {
+                    $name = $ard->formatName($p);
+                    $rank = $p['descRango'] ?? $p['descCortoRango'] ?? $p['desRango'] ?? $rank;
+                }
             }
             if (! $name) {
                 $name = $dir->getDisplayName($digits);
             }
             if ($name) {
-                $data['doctor_name'] = $name.' ('.$digits.')';
+                $display = $name;
+                if ($rank) {
+                    $display .= ' ('.$rank.')';
+                }
+                $data['doctor_name'] = $display;
                 $data['doctor_external_id'] = $digits;
             }
         }

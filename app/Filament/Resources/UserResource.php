@@ -29,6 +29,8 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Section::make()
+                    ->schema([
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255)
@@ -68,6 +70,8 @@ class UserResource extends Resource
                     ->required()
                     ->label('Estado')
                     ->helperText('Activo/Inactivo'),
+                    ])
+                    ->columns(2)
             ]);
     }
 

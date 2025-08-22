@@ -5,6 +5,8 @@ namespace App\Filament\Resources\MedicationEntryResource\Pages;
 use App\Filament\Resources\MedicationEntryResource;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Actions;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class ListMedicationEntries extends ListRecords
 {
@@ -29,5 +31,12 @@ class ListMedicationEntries extends ListRecords
                 ->openUrlInNewTab()
                 ->color('danger'),
         ];
+    }
+
+    protected function getTableQuery(): Builder
+    {
+        $query = parent::getTableQuery();
+        // Only show current user's records
+        return $query->where('user_id', Auth::id());
     }
 } 

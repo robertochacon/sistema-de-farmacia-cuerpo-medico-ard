@@ -4,10 +4,16 @@ namespace App\Filament\Resources\MedicationEntryResource\Pages;
 
 use App\Filament\Resources\MedicationEntryResource;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Gate;
 
 class EditMedicationEntry extends EditRecord
 {
     protected static string $resource = MedicationEntryResource::class;
+
+    protected function authorizeAccess(): void
+    {
+        abort_unless(Gate::allows('update', $this->getRecord()), 403);
+    }
 
     protected function getRedirectUrl(): string
     {

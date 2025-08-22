@@ -5,6 +5,8 @@ namespace App\Filament\Resources\MedicationOutputResource\Pages;
 use App\Filament\Resources\MedicationOutputResource;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Actions;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class ListMedicationOutputs extends ListRecords
 {
@@ -44,5 +46,11 @@ class ListMedicationOutputs extends ListRecords
                 ->url(fn () => static::getResource()::getUrl('index', ['table[filters][date][from]' => now()->startOfYear()->toDateString(), 'table[filters][date][until]' => now()->endOfYear()->toDateString()]))
                 ->color('warning'),
         ];
+    }
+
+    protected function getTableQuery(): Builder
+    {
+        $query = parent::getTableQuery();
+        return $query->where('user_id', Auth::id());
     }
 } 

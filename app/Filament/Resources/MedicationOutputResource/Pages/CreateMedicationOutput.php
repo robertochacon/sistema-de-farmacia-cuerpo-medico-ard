@@ -66,6 +66,7 @@ class CreateMedicationOutput extends CreateRecord
             $data['patient_name'] = null;
             $data['doctor_external_id'] = null;
             $data['doctor_name'] = null;
+            // Responsable es opcional; conservar lo enviado en el formulario
         }
 
         // Resolve names from external IDs for denormalized storage
@@ -88,18 +89,30 @@ class CreateMedicationOutput extends CreateRecord
             $ard = app(\App\Services\ARD::class);
             $dir = app(\App\Services\MilitaryDirectory::class);
             $name = null;
+            $rank = null;
             // 1) Armada API
             $p = $armada->getPerson($digits);
-            $name = is_array($p) ? $armada->formatName($p) : null;
+            if (is_array($p)) {
+                $name = $armada->formatName($p);
+                $rank = $p['descRango'] ?? $p['descCortoRango'] ?? $p['desRango'] ?? null;
+            }
             if ($ard->isConfigured()) {
                 $p = $name ? null : $ard->getPerson($digits);
-                $name = $name ?: (is_array($p) ? $ard->formatName($p) : null);
+                if (! $name && is_array($p)) {
+                    $name = $ard->formatName($p);
+                    $rank = $p['descRango'] ?? $p['descCortoRango'] ?? $p['desRango'] ?? $rank;
+                }
             }
             if (! $name) {
                 $name = $dir->getDisplayName($digits);
             }
             if ($name) {
-                $data['patient_name'] = $name.' ('.$digits.')';
+                $display = $name;
+                if ($rank) {
+                    $display .= ' ('.$rank.')';
+                }
+                $display .= ' ('.$digits.')';
+                $data['patient_name'] = $display;
                 $data['patient_external_id'] = $digits;
             }
             if (empty($data['patient_name'])) {
@@ -120,18 +133,29 @@ class CreateMedicationOutput extends CreateRecord
             $ard = app(\App\Services\ARD::class);
             $dir = app(\App\Services\MilitaryDirectory::class);
             $name = null;
+            $rank = null;
             // 1) Armada API
             $p = $armada->getPerson($digits);
-            $name = is_array($p) ? $armada->formatName($p) : null;
+            if (is_array($p)) {
+                $name = $armada->formatName($p);
+                $rank = $p['descRango'] ?? $p['descCortoRango'] ?? $p['desRango'] ?? null;
+            }
             if ($ard->isConfigured()) {
                 $p = $name ? null : $ard->getPerson($digits);
-                $name = $name ?: (is_array($p) ? $ard->formatName($p) : null);
+                if (! $name && is_array($p)) {
+                    $name = $ard->formatName($p);
+                    $rank = $p['descRango'] ?? $p['descCortoRango'] ?? $p['desRango'] ?? $rank;
+                }
             }
             if (! $name) {
                 $name = $dir->getDisplayName($digits);
             }
             if ($name) {
-                $data['doctor_name'] = $name.' ('.$digits.')';
+                $display = $name;
+                if ($rank) {
+                    $display .= ' ('.$rank.')';
+                }
+                $data['doctor_name'] = $display;
                 $data['doctor_external_id'] = $digits;
             }
         }

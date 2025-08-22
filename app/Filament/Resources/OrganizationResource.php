@@ -30,6 +30,8 @@ class OrganizationResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Section::make()
+                    ->schema([
                 Forms\Components\TextInput::make('name')->label('Nombre')->required()->maxLength(255),
                 Forms\Components\Select::make('type')->label('Tipo')->options([
                     'company' => 'Empresa',
@@ -40,7 +42,8 @@ class OrganizationResource extends Resource
                 Forms\Components\TextInput::make('address')->label('Dirección')->maxLength(255),
                 Forms\Components\Toggle::make('status')->label('Estado')->default(true),
                 Forms\Components\Textarea::make('notes')->label('Notas')->columnSpanFull(),
-            ])->columns(2);
+                    ])->columns(2)
+            ]);
     }
 
     public static function table(Table $table): Table

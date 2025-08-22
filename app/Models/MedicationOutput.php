@@ -18,6 +18,8 @@ class MedicationOutput extends Model
         'patient_name',
         'doctor_external_id',
         'doctor_name',
+        'responsible_external_id',
+        'responsible_name',
         'notes',
     ];
 

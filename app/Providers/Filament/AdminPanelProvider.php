@@ -26,6 +26,7 @@ use App\Filament\Widgets\DailyOutputsByPatientTypeChart;
 use Illuminate\Support\Facades\Auth;
 use Filament\Navigation\MenuItem;
 use TomatoPHP\FilamentArtisan\FilamentArtisanPlugin;
+use Illuminate\Support\Facades\URL;
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -81,6 +82,11 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-user-circle')
                     ->url(fn () => route('profile.show')),
             ])
+            ->navigation(true)
+            ->sidebarCollapsibleOnDesktop()
+            ->sidebarFullyCollapsibleOnDesktop()
+            ->sidebarWidth('full')
+            ->topNavigation()
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
